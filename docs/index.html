@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2b4acb">
+<meta name="description" content="Fotografiezi foi de hârtie și faci din ele un PDF.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Scaner PDF</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: o coloană de aplicație — antet cu numele documentului, foile în grilă, bară de acțiuni jos; editorul se deschide peste tot ecranul, pe fundal închis, ca o masă de lucru luminată. */
+:root{
+  --paper:#eef1f6; --surface:#ffffff; --ink:#141b2e; --muted:#5a6479; --line:#d5dbe6;
+  --accent:#2b4acb; --accent-ink:#ffffff; --accent-soft:#e2e8fb; --danger:#b42318; --sheet:#ffffff;
+  --stage:#0d111c; --stage-ink:#e9ecf4; --stage-muted:#9aa3b8; --stage-line:#2c3347; --handle:#ffd23f;
+  --font-display:"Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-body:"IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --radius:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0f1322; --surface:#171c2d; --ink:#e8ebf4; --muted:#9aa3b8; --line:#2a3147;
+    --accent:#8ea4ff; --accent-ink:#0b1020; --accent-soft:#1f2850; --danger:#ff8a7a; --sheet:#ffffff;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0f1322; --surface:#171c2d; --ink:#e8ebf4; --muted:#9aa3b8; --line:#2a3147;
+  --accent:#8ea4ff; --accent-ink:#0b1020; --accent-soft:#1f2850; --danger:#ff8a7a; --sheet:#ffffff;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.45 var(--font-body);-webkit-tap-highlight-color:transparent}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.wrap{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+#app{display:flex;flex-direction:column;height:100%}
+
+/* antet */
+.top{background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:grid;grid-template-columns:1fr auto;gap:6px 12px;padding-block:10px 12px}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-weight:700;font-size:19px;letter-spacing:-.01em}
+.brand svg{width:26px;height:26px;flex:none}
+.docname{grid-column:1 / -1;display:flex;align-items:baseline;gap:10px;min-width:0}
+.docname input{flex:1;min-width:0;border:0;border-bottom:1px dashed var(--line);background:transparent;padding:4px 0;font-weight:600;font-size:17px}
+.docname input:focus{outline:none;border-bottom:1px solid var(--accent)}
+.meta{font-family:var(--font-mono);font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.linkbtn{border:0;background:transparent;color:var(--accent);font-weight:600;padding:6px 4px;border-radius:6px}
+.linkbtn.armed{color:var(--danger)}
+
+/* conținut */
+main{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+main .wrap{padding-block:18px 28px}
+
+.empty{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;max-width:620px}
+.empty-art{width:132px;height:auto}
+.empty h1{font-family:var(--font-display);font-weight:700;font-size:clamp(26px,6.4vw,38px);line-height:1.08;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.empty p{margin:0;color:var(--muted);max-width:52ch}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:10px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;align-items:center}
+.steps li::before{counter-increment:s;content:counter(s);display:grid;place-items:center;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);font-family:var(--font-mono);font-size:13px;font-weight:500}
+.empty-actions{display:flex;flex-wrap:wrap;gap:10px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:18px 16px;margin:0;padding:0;list-style:none}
+.sheet{display:flex;flex-direction:column;gap:6px;min-width:0}
+.thumb{display:block;width:100%;aspect-ratio:210 / 297;max-width:100%;padding:0;border:1px solid var(--line);background:var(--sheet);border-radius:3px;overflow:hidden;box-shadow:0 1px 2px rgba(20,27,46,.08),0 8px 18px -12px rgba(20,27,46,.45)}
+.thumb img{width:100%;height:100%;object-fit:contain;display:block}
+.cap{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.num{font-family:var(--font-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.acts{display:flex;gap:2px}
+.ib{display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:8px;background:transparent;color:var(--muted)}
+.ib:hover{background:var(--accent-soft);color:var(--ink)}
+.ib:disabled{opacity:.3;cursor:default;background:transparent}
+.ib svg{width:18px;height:18px}
+.ib.armed{background:var(--danger);color:var(--surface);width:auto;padding:0 8px;font-size:12px;font-weight:600}
+
+/* bara de jos */
+.bar{background:var(--surface);border-top:1px solid var(--line)}
+.bar .wrap{display:flex;gap:8px;padding-block:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 16px;border-radius:var(--radius);border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;text-align:center}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn svg{width:20px;height:20px;flex:none}
+.bar .btn{flex:1;min-width:0;flex-direction:column;gap:2px;font-size:13px;min-height:58px;padding:6px 8px}
+.bar .btn svg{width:22px;height:22px}
+
+/* editor */
+.editor{position:fixed;inset:0;z-index:40;background:var(--stage);color:var(--stage-ink);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.ed-top .wrap{display:flex;align-items:flex-start;gap:12px;padding-block:12px 6px}
+.ed-title{flex:1;min-width:0}
+.ed-title h2{margin:0;font-family:var(--font-display);font-weight:600;font-size:19px;letter-spacing:-.01em}
+.ed-title p{margin:2px 0 0;font-size:13px;color:var(--stage-muted)}
+.editor .ib{color:var(--stage-ink)}
+.editor .ib:hover{background:var(--stage-line)}
+.ed-stage{flex:1;min-height:0;position:relative;display:grid;place-items:center;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));overflow:hidden}
+.frame{position:relative;touch-action:none;user-select:none;-webkit-user-select:none}
+.frame canvas{display:block;width:100%;height:100%}
+.frame svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;touch-action:none}
+.q-mask{fill:rgba(5,8,16,.55);fill-rule:evenodd}
+.q-line{fill:none;stroke:var(--handle)}
+.q-dot{fill:rgba(255,210,63,.22);stroke:var(--handle)}
+.loupe{position:absolute;top:14px;width:118px;height:118px;border-radius:50%;border:3px solid var(--handle);background:var(--stage);box-shadow:0 8px 24px rgba(0,0,0,.5);pointer-events:none}
+#prevHost{display:grid;place-items:center}
+#prevHost canvas{display:block;background:var(--sheet);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.ed-controls .wrap{display:grid;gap:10px;padding-block:8px 14px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.row .grow{flex:1 1 auto}
+.editor .btn{background:transparent;border-color:var(--stage-line);color:var(--stage-ink)}
+.editor .btn.primary{background:var(--handle);border-color:var(--handle);color:var(--stage)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.chip{flex:none;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--stage-line);background:transparent;color:var(--stage-ink);font-weight:500}
+.chip[aria-pressed="true"]{background:var(--stage-ink);border-color:var(--stage-ink);color:var(--stage)}
+
+/* fereastra PDF */
+.scrim{position:fixed;inset:0;z-index:50;background:rgba(8,11,20,.55);display:flex;align-items:flex-end;justify-content:center}
+.card{width:100%;max-width:540px;background:var(--surface);color:var(--ink);border-radius:16px 16px 0 0;padding-block:20px calc(20px + env(safe-area-inset-bottom,0px));padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:grid;gap:16px;max-height:100%;overflow-y:auto}
+@media (min-width:640px){.scrim{align-items:center}.card{border-radius:16px;padding-bottom:20px}}
+.card h2{margin:0;font-family:var(--font-display);font-size:22px;letter-spacing:-.01em}
+.field{display:grid;gap:6px}
+.field>label,.field legend{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:0}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+.fname{display:flex;align-items:center;border:1px solid var(--line);border-radius:var(--radius);padding:0 12px;background:var(--paper)}
+.fname input{flex:1;min-width:0;border:0;background:transparent;padding:12px 0;font-size:16px}
+.fname input:focus{outline:none}
+.fname:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.fname span{font-family:var(--font-mono);color:var(--muted)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{display:grid;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius);font-weight:600;cursor:pointer;min-width:0}
+.seg label small{font-weight:400;font-size:12px;color:var(--muted);font-family:var(--font-mono)}
+.seg input:checked+label{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.seg input:focus-visible+label{outline:3px solid var(--accent);outline-offset:2px}
+.card .row .btn{flex:1 1 160px}
+.ready{display:grid;gap:10px;padding:14px;border-radius:var(--radius);background:var(--accent-soft)}
+.ready p{margin:0;font-weight:600}
+.ready p span{font-family:var(--font-mono);font-weight:500;font-size:13px;color:var(--muted)}
+
+/* stări */
+.busy{position:fixed;inset:0;z-index:70;display:grid;place-items:center;align-content:center;gap:14px;background:rgba(8,11,20,.72);color:#eef1f8;font-weight:500}
+.spin{width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.25);border-top-color:var(--handle);animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.spin{animation:none}}
+.toast{position:fixed;z-index:80;left:50%;transform:translateX(-50%);top:calc(14px + env(safe-area-inset-top,0px));max-width:calc(100% - 32px);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:999px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+</style>
+
+<div id="app">
+  <header class="top">
+    <div class="wrap">
+      <div class="brand">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M10 7h9l5 5v13H10z" fill="var(--sheet)"/><path d="M19 7v5h5" fill="none" stroke="var(--accent)" stroke-width="1.5"/><path d="M7 10V7h3M25 22v3h-3M7 22v3h3" fill="none" stroke="var(--handle)" stroke-width="2.2" stroke-linecap="round"/></svg>
+        Scaner PDF
+      </div>
+      <button class="linkbtn" id="newDoc" type="button" hidden>Document nou</button>
+      <div class="docname">
+        <label for="docName" class="vh">Numele documentului</label>
+        <input id="docName" type="text" autocomplete="off" spellcheck="false">
+        <span class="meta" id="meta">0 pagini</span>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="wrap">
+      <section class="empty" id="empty">
+        <svg class="empty-art" viewBox="0 0 132 110" aria-hidden="true">
+          <rect x="0" y="0" width="132" height="110" rx="12" fill="var(--accent-soft)"/>
+          <g transform="rotate(-7 66 55)">
+            <rect x="38" y="14" width="58" height="82" rx="2" fill="var(--sheet)" stroke="var(--line)"/>
+            <path d="M46 28h34M46 36h40M46 44h28M46 56h38M46 64h22" stroke="var(--muted)" stroke-width="2.4" stroke-linecap="round" opacity=".55"/>
+          </g>
+          <g fill="none" stroke="#e0a800" stroke-width="2.4">
+            <circle cx="36" cy="19" r="5"/><circle cx="94" cy="12" r="5"/><circle cx="104" cy="92" r="5"/><circle cx="46" cy="99" r="5"/>
+          </g>
+        </svg>
+        <h1>Fotografiază o foaie și fă din ea un PDF curat.</h1>
+        <ol class="steps">
+          <li>Fotografiază pagina cu telefonul sau tableta.</li>
+          <li>Potrivește colțurile foii. Aplicația le caută singură.</li>
+          <li>Alege cum arată: curat color, alb-negru sau gri.</li>
+          <li>Adaugă câte pagini vrei, apoi creează PDF-ul.</li>
+        </ol>
+        <div class="empty-actions">
+          <button class="btn primary" type="button" data-act="cam">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+            Fotografiază prima pagină
+          </button>
+          <button class="btn" type="button" id="sample">Încearcă pe o pagină exemplu</button>
+        </div>
+        <p>Paginile rămân doar pe dispozitivul tău. Nu se trimit nicăieri până nu trimiți tu PDF-ul.</p>
+      </section>
+      <ol class="grid" id="grid" hidden></ol>
+    </div>
+  </main>
+
+  <nav class="bar" aria-label="Acțiuni">
+    <div class="wrap">
+      <button class="btn primary" type="button" data-act="cam">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+        Fotografiază
+      </button>
+      <button class="btn" type="button" data-act="gal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="m4 16 5-5 4 4 2-2 5 5"/><circle cx="15.5" cy="9.5" r="1.5"/></svg>
+        Din galerie
+      </button>
+      <button class="btn" type="button" id="openPdf" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg>
+        <span id="pdfLabel">Creează PDF</span>
+      </button>
+    </div>
+  </nav>
+</div>
+
+<input type="file" id="camIn" class="vh" accept="image/*" capture="environment" tabindex="-1" aria-hidden="true">
+<input type="file" id="galIn" class="vh" accept="image/*" multiple tabindex="-1" aria-hidden="true">
+
+<section class="editor" id="editor" hidden aria-labelledby="edTitle">
+  <div class="ed-top">
+    <div class="wrap">
+      <div class="ed-title">
+        <h2 id="edTitle">Potrivește colțurile foii</h2>
+        <p id="edHint">Trage de cercurile galbene până ajung în colțurile foii.</p>
+      </div>
+      <button class="ib" type="button" id="edClose" aria-label="Închide fără să salvezi">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="ed-stage" id="stage">
+    <div class="frame" id="frame">
+      <canvas id="cropCanvas"></canvas>
+      <svg id="quad" aria-hidden="true"></svg>
+    </div>
+    <div id="prevHost" hidden></div>
+    <canvas class="loupe" id="loupe" width="236" height="236" hidden></canvas>
+  </div>
+  <div class="ed-controls">
+    <div class="wrap" id="ctl1">
+      <div class="row">
+        <button class="btn" type="button" id="fullImg">Toată poza</button>
+        <button class="btn" type="button" id="autoDetect">Caută colțurile</button>
+        <span class="grow"></span>
+        <button class="btn primary" type="button" id="toStep2">Continuă</button>
+      </div>
+    </div>
+    <div class="wrap" id="ctl2" hidden>
+      <div class="chips" id="chips" role="group" aria-label="Aspectul paginii"></div>
+      <div class="row">
+        <button class="btn" type="button" id="back">Înapoi la colțuri</button>
+        <button class="btn" type="button" id="rotate" aria-label="Rotește la dreapta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg>
+          Rotește
+        </button>
+        <span class="grow"></span>
+        <button class="btn" type="button" id="saveMore">Adaugă și fotografiază alta</button>
+        <button class="btn primary" type="button" id="save">Adaugă pagina</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="scrim" id="pdfSheet" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="pdfTitle">
+    <h2 id="pdfTitle">Creează PDF</h2>
+    <div class="field">
+      <label for="fileName">Numele fișierului</label>
+      <div class="fname"><input id="fileName" type="text" autocomplete="off" spellcheck="false"><span>.pdf</span></div>
+    </div>
+    <fieldset class="field">
+      <legend>Mărimea paginii</legend>
+      <div class="seg">
+        <input type="radio" name="size" id="szA4" value="a4" checked><label for="szA4">A4<small>210 × 297 mm</small></label>
+        <input type="radio" name="size" id="szImg" value="img"><label for="szImg">Ca fotografia<small>fără margini</small></label>
+      </div>
+    </fieldset>
+    <fieldset class="field">
+      <legend>Calitate</legend>
+      <div class="seg">
+        <input type="radio" name="q" id="qHi" value="hi" checked><label for="qHi">Bună<small>pentru tipar</small></label>
+        <input type="radio" name="q" id="qLo" value="lo"><label for="qLo">Fișier mic<small>WhatsApp, e-mail</small></label>
+      </div>
+    </fieldset>
+    <div class="row" id="pdfActions">
+      <button class="btn" type="button" id="pdfCancel">Renunță</button>
+      <button class="btn primary" type="button" id="pdfMake">Creează PDF-ul</button>
+    </div>
+    <div class="ready" id="pdfReady" hidden>
+      <p>PDF gata <span id="pdfInfo"></span></p>
+      <div class="row">
+        <button class="btn primary" type="button" id="pdfSave">Salvează pe dispozitiv</button>
+        <button class="btn" type="button" id="pdfShare" hidden>Trimite (WhatsApp, e-mail…)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="busy" id="busy" hidden><div class="spin"></div><div id="busyText">Se lucrează…</div></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="jspdf.umd.min.js"></script>
+<script>
+(() => {
+"use strict";
+const $ = s => document.querySelector(s);
+const MAX_ORIG = 2400;   // latura lungă a fotografiei păstrate
+const MAX_OUT = 2000;    // latura lungă a paginii îndreptate (~240 dpi pe A4)
+const FILTERS = [["curat", "Curat color"], ["ab", "Alb-negru"], ["gri", "Gri"], ["original", "Original"]];
+const inArtifact = !!(window.claude && typeof window.claude.use === "function");
+
+let pages = [];          // {id, orig, w, h, corners, rot, filter, out, ow, oh, url}
+let pdfBlob = null;
+
+// ---------- stocare pe dispozitiv (IndexedDB); dacă lipsește, aplicația merge doar în memorie ----------
+const store = (() => {
+  let dbp = null;
+  const open = () => dbp || (dbp = new Promise((res, rej) => {
+    const r = indexedDB.open("scaner-pdf", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("pagini", { keyPath: "id" });
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  }));
+  async function run(mode, fn) {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const t = db.transaction("pagini", mode);
+      const req = fn(t.objectStore("pagini"));
+      t.oncomplete = () => res(req && req.result);
+      t.onerror = t.onabort = () => rej(t.error);
+    });
+  }
+  const safe = f => f().catch(() => null);
+  return {
+    all: () => safe(() => run("readonly", s => s.getAll())),
+    put: rec => safe(() => run("readwrite", s => s.put(rec))),
+    del: id => safe(() => run("readwrite", s => s.delete(id))),
+    clear: () => safe(() => run("readwrite", s => s.clear())),
+  };
+})();
+const ls = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+
+// ---------- mărunțișuri ----------
+const nextFrame = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+function canvasOf(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
+function toBlob(canvas, q) {
+  return new Promise((res, rej) => canvas.toBlob(b => b ? res(b) : rej(new Error("toBlob")), "image/jpeg", q));
+}
+function loadImage(blob) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(blob), img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); res(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("Imaginea nu a putut fi citită.")); };
+    img.src = url;
+  });
+}
+function pagesLabel(n) {
+  const de = n >= 20 && (n % 100 === 0 || n % 100 >= 20) ? "de " : "";
+  return `${n} ${de}${n === 1 ? "pagină" : "pagini"}`;
+}
+function sizeLabel(b) {
+  return b < 1048576
+    ? Math.max(1, Math.round(b / 1024)) + " KB"
+    : (b / 1048576).toLocaleString("ro-RO", { maximumFractionDigits: 1 }) + " MB";
+}
+function todayName() {
+  const d = new Date(), p = n => String(n).padStart(2, "0");
+  return `Scanare ${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()}`;
+}
+let toastT = 0;
+function toast(t) {
+  const el = $("#toast"); el.textContent = t; el.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 3600);
+}
+function busy(t) { $("#busyText").textContent = t; $("#busy").hidden = false; }
+function unbusy() { $("#busy").hidden = true; }
+
+// ---------- prelucrarea imaginii ----------
+async function prepareOriginal(blob) {
+  const img = await loadImage(blob);
+  const k = Math.min(1, MAX_ORIG / Math.max(img.naturalWidth, img.naturalHeight));
+  const w = Math.round(img.naturalWidth * k), h = Math.round(img.naturalHeight * k);
+  const c = canvasOf(w, h); c.getContext("2d").drawImage(img, 0, 0, w, h);
+  return { blob: await toBlob(c, 0.92), w, h, canvas: c };
+}
+const fullCorners = (w, h) => [[0, 0], [w, 0], [w, h], [0, h]];
+function polyArea(q) {
+  let a = 0;
+  for (let i = 0; i < 4; i++) { const [x1, y1] = q[i], [x2, y2] = q[(i + 1) % 4]; a += x1 * y2 - x2 * y1; }
+  return Math.abs(a) / 2;
+}
+
+// Caută foaia: cea mai mare zonă luminoasă (prag Otsu), apoi colțurile ei extreme.
+function detectCorners(src, w, h) {
+  const k = 220 / Math.max(w, h), sw = Math.max(8, Math.round(w * k)), sh = Math.max(8, Math.round(h * k));
+  const c = canvasOf(sw, sh), x = c.getContext("2d", { willReadFrequently: true });
+  x.drawImage(src, 0, 0, sw, sh);
+  const d = x.getImageData(0, 0, sw, sh).data, n = sw * sh, g = new Uint8Array(n);
+  for (let i = 0; i < n; i++) g[i] = (d[i * 4] * 0.299 + d[i * 4 + 1] * 0.587 + d[i * 4 + 2] * 0.114) | 0;
+  const hist = new Float64Array(256); for (let i = 0; i < n; i++) hist[g[i]]++;
+  let sum = 0; for (let t = 0; t < 256; t++) sum += t * hist[t];
+  let sumB = 0, wB = 0, best = 0, thr = 128;
+  for (let t = 0; t < 256; t++) {
+    wB += hist[t]; if (!wB) continue;
+    const wF = n - wB; if (!wF) break;
+    sumB += t * hist[t];
+    const mB = sumB / wB, mF = (sum - sumB) / wF, v = wB * wF * (mB - mF) * (mB - mF);
+    if (v > best) { best = v; thr = t; }
+  }
+  const lab = new Int32Array(n), stack = new Int32Array(n);
+  let id = 0, bestId = 0, bestSize = 0;
+  for (let s = 0; s < n; s++) {
+    if (g[s] <= thr || lab[s]) continue;
+    id++; let top = 0, size = 0; stack[top++] = s; lab[s] = id;
+    while (top) {
+      const p = stack[--top]; size++;
+      const px = p % sw;
+      if (px > 0 && !lab[p - 1] && g[p - 1] > thr) { lab[p - 1] = id; stack[top++] = p - 1; }
+      if (px < sw - 1 && !lab[p + 1] && g[p + 1] > thr) { lab[p + 1] = id; stack[top++] = p + 1; }
+      if (p >= sw && !lab[p - sw] && g[p - sw] > thr) { lab[p - sw] = id; stack[top++] = p - sw; }
+      if (p < n - sw && !lab[p + sw] && g[p + sw] > thr) { lab[p + sw] = id; stack[top++] = p + sw; }
+    }
+    if (size > bestSize) { bestSize = size; bestId = id; }
+  }
+  const ratio = bestSize / n;
+  if (!bestId || ratio < 0.12 || ratio > 0.97) return null;
+  let tl, tr, br, bl, a = Infinity, b = -Infinity, cc = -Infinity, dd = Infinity;
+  for (let p = 0; p < n; p++) {
+    if (lab[p] !== bestId) continue;
+    const px = p % sw, py = (p / sw) | 0, s1 = px + py, s2 = px - py;
+    if (s1 < a) { a = s1; tl = [px, py]; }
+    if (s1 > b) { b = s1; br = [px, py]; }
+    if (s2 > cc) { cc = s2; tr = [px, py]; }
+    if (s2 < dd) { dd = s2; bl = [px, py]; }
+  }
+  const q = [tl, tr, br, bl].map(([px, py]) => [
+    Math.min(w, Math.max(0, (px + 0.5) / k)), Math.min(h, Math.max(0, (py + 0.5) / k)),
+  ]);
+  return polyArea(q) < 0.1 * w * h ? null : q;
+}
+
+function solve(A, b) {
+  const n = b.length, M = A.map((r, i) => [...r, b[i]]);
+  for (let c = 0; c < n; c++) {
+    let p = c;
+    for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    [M[c], M[p]] = [M[p], M[c]];
+    const v = M[c][c]; if (Math.abs(v) < 1e-12) throw new Error("Colțurile nu formează o foaie.");
+    for (let k = c; k <= n; k++) M[c][k] /= v;
+    for (let r = 0; r < n; r++) {
+      if (r === c) continue;
+      const f = M[r][c]; if (!f) continue;
+      for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k];
+    }
+  }
+  return M.map(r => r[n]);
+}
+// omografia care duce punctele `from` în punctele `to`
+function homography(from, to) {
+  const A = [], b = [];
+  for (let i = 0; i < 4; i++) {
+    const [x, y] = from[i], [u, v] = to[i];
+    A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u);
+    A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v);
+  }
+  return [...solve(A, b), 1];
+}
+// îndreaptă patrulaterul `quad` din src într-un dreptunghi
+function warp(src, quad, maxSide) {
+  const dist = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]);
+  let W = Math.max(dist(quad[0], quad[1]), dist(quad[3], quad[2]));
+  let H = Math.max(dist(quad[0], quad[3]), dist(quad[1], quad[2]));
+  const k = Math.min(1, maxSide / Math.max(W, H));
+  W = Math.max(1, Math.round(W * k)); H = Math.max(1, Math.round(H * k));
+  const m = homography([[0, 0], [W, 0], [W, H], [0, H]], quad);
+  const out = new ImageData(W, H), o = out.data, s = src.data, sw = src.width, sh = src.height;
+  for (let y = 0; y < H; y++) {
+    const Y = y + 0.5;
+    for (let x = 0; x < W; x++) {
+      const X = x + 0.5, den = m[6] * X + m[7] * Y + 1;
+      let fx = (m[0] * X + m[1] * Y + m[2]) / den - 0.5, fy = (m[3] * X + m[4] * Y + m[5]) / den - 0.5;
+      if (fx < 0) fx = 0; else if (fx > sw - 1) fx = sw - 1;
+      if (fy < 0) fy = 0; else if (fy > sh - 1) fy = sh - 1;
+      const x0 = fx | 0, y0 = fy | 0, x1 = x0 + 1 < sw ? x0 + 1 : x0, y1 = y0 + 1 < sh ? y0 + 1 : y0;
+      const ax = fx - x0, ay = fy - y0;
+      const i00 = (y0 * sw + x0) * 4, i10 = (y0 * sw + x1) * 4, i01 = (y1 * sw + x0) * 4, i11 = (y1 * sw + x1) * 4;
+      const oi = (y * W + x) * 4;
+      for (let ch = 0; ch < 3; ch++) {
+        const t = s[i00 + ch] + (s[i10 + ch] - s[i00 + ch]) * ax;
+        const u = s[i01 + ch] + (s[i11 + ch] - s[i01 + ch]) * ax;
+        o[oi + ch] = t + (u - t) * ay;
+      }
+      o[oi + 3] = 255;
+    }
+  }
+  return out;
+}
+
+function maxFilter(a, w, h, r) {
+  const t = new Float32Array(w * h), o = new Float32Array(w * h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    let m = 0;
+    for (let k = Math.max(0, x - r); k <= Math.min(w - 1, x + r); k++) if (a[y * w + k] > m) m = a[y * w + k];
+    t[y * w + x] = m;
+  }
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    let m = 0;
+    for (let k = Math.max(0, y - r); k <= Math.min(h - 1, y + r); k++) if (t[k * w + x] > m) m = t[k * w + x];
+    o[y * w + x] = m;
+  }
+  return o;
+}
+function boxBlur(a, w, h, r) {
+  const t = new Float32Array(w * h), o = new Float32Array(w * h);
+  for (let y = 0; y < h; y++) {
+    let s = 0, c = 0;
+    for (let k = 0; k <= Math.min(w - 1, r); k++) { s += a[y * w + k]; c++; }
+    for (let x = 0; x < w; x++) {
+      t[y * w + x] = s / c;
+      const add = x + r + 1, rem = x - r;
+      if (add < w) { s += a[y * w + add]; c++; }
+      if (rem >= 0) { s -= a[y * w + rem]; c--; }
+    }
+  }
+  for (let x = 0; x < w; x++) {
+    let s = 0, c = 0;
+    for (let k = 0; k <= Math.min(h - 1, r); k++) { s += t[k * w + x]; c++; }
+    for (let y = 0; y < h; y++) {
+      o[y * w + x] = s / c;
+      const add = y + r + 1, rem = y - r;
+      if (add < h) { s += t[add * w + x]; c++; }
+      if (rem >= 0) { s -= t[rem * w + x]; c--; }
+    }
+  }
+  return o;
+}
+// Luminozitatea hârtiei goale în fiecare punct: scrisul e șters cu un filtru de maxim, apoi totul se netezește.
+function paperLight(L, W, H) {
+  const f = 4, w = Math.ceil(W / f), h = Math.ceil(H / f);
+  let a = new Float32Array(w * h);
+  for (let y = 0; y < H; y++) {
+    const row = ((y / f) | 0) * w;
+    for (let x = 0; x < W; x++) { const i = row + ((x / f) | 0), v = L[y * W + x]; if (v > a[i]) a[i] = v; }
+  }
+  a = maxFilter(a, w, h, 2);
+  a = boxBlur(a, w, h, Math.max(2, Math.round(Math.max(w, h) / 40)));
+  const bg = new Float32Array(W * H);
+  for (let y = 0; y < H; y++) {
+    let fy = (y + 0.5) / f - 0.5; if (fy < 0) fy = 0; if (fy > h - 1) fy = h - 1;
+    const y0 = fy | 0, y1 = Math.min(y0 + 1, h - 1), ay = fy - y0;
+    for (let x = 0; x < W; x++) {
+      let fx = (x + 0.5) / f - 0.5; if (fx < 0) fx = 0; if (fx > w - 1) fx = w - 1;
+      const x0 = fx | 0, x1 = Math.min(x0 + 1, w - 1), ax = fx - x0;
+      const t = a[y0 * w + x0] + (a[y0 * w + x1] - a[y0 * w + x0]) * ax;
+      const u = a[y1 * w + x0] + (a[y1 * w + x1] - a[y1 * w + x0]) * ax;
+      bg[y * W + x] = t + (u - t) * ay;
+    }
+  }
+  return bg;
+}
+function applyFilter(img, kind) {
+  const W = img.width, H = img.height, n = W * H, s = img.data, out = new ImageData(W, H), o = out.data;
+  if (kind === "original") { o.set(s); return out; }
+  const L = new Uint8ClampedArray(n);
+  for (let i = 0; i < n; i++) L[i] = s[i * 4] * 0.299 + s[i * 4 + 1] * 0.587 + s[i * 4 + 2] * 0.114;
+  if (kind === "gri") {
+    for (let i = 0; i < n; i++) { o[i * 4] = o[i * 4 + 1] = o[i * 4 + 2] = L[i]; o[i * 4 + 3] = 255; }
+    return out;
+  }
+  const bg = paperLight(L, W, H);
+  if (kind === "ab") {
+    for (let i = 0; i < n; i++) {
+      const v = 255 * (L[i] / (bg[i] + 1) - 0.55) / 0.33;
+      o[i * 4] = o[i * 4 + 1] = o[i * 4 + 2] = v; o[i * 4 + 3] = 255;
+    }
+  } else {
+    for (let i = 0; i < n; i++) {
+      const b = bg[i] + 1;
+      for (let ch = 0; ch < 3; ch++) o[i * 4 + ch] = 255 * (s[i * 4 + ch] / b - 0.22) / 0.68;
+      o[i * 4 + 3] = 255;
+    }
+  }
+  return out;
+}
+function rendered(imgData, rot) {
+  const c0 = canvasOf(imgData.width, imgData.height);
+  c0.getContext("2d").putImageData(imgData, 0, 0);
+  if (!rot) return c0;
+  const side = rot % 2 === 1;
+  const c = canvasOf(side ? c0.height : c0.width, side ? c0.width : c0.height), x = c.getContext("2d");
+  x.translate(c.width / 2, c.height / 2); x.rotate(rot * Math.PI / 2); x.drawImage(c0, -c0.width / 2, -c0.height / 2);
+  return c;
+}
+function pixelsOf(src, w, h) {
+  const c = canvasOf(w, h), x = c.getContext("2d", { willReadFrequently: true });
+  x.drawImage(src, 0, 0, w, h);
+  return x.getImageData(0, 0, w, h);
+}
+
+// ---------- paginile ----------
+const rec = (p, i) => ({ id: p.id, order: i, orig: p.orig, w: p.w, h: p.h, corners: p.corners, rot: p.rot, filter: p.filter, out: p.out, ow: p.ow, oh: p.oh });
+function persistAll() { pages.forEach((p, i) => store.put(rec(p, i))); }
+
+const ICONS = {
+  left: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>',
+  right: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg>',
+  del: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></svg>',
+};
+function renderGrid() {
+  const grid = $("#grid"), n = pages.length;
+  $("#empty").hidden = n > 0; grid.hidden = n === 0;
+  $("#newDoc").hidden = n === 0;
+  $("#meta").textContent = pagesLabel(n);
+  $("#openPdf").disabled = n === 0;
+  $("#pdfLabel").textContent = n ? `Creează PDF (${n})` : "Creează PDF";
+  grid.replaceChildren(...pages.map((p, i) => {
+    const li = document.createElement("li");
+    li.className = "sheet"; li.dataset.id = p.id;
+    li.innerHTML = `<button class="thumb" type="button" data-a="edit" aria-label="Modifică pagina ${i + 1}"><img alt="" src="${p.url}"></button>
+      <div class="cap"><span class="num">pag. ${i + 1}</span><span class="acts">
+        <button class="ib" type="button" data-a="left" aria-label="Mută pagina ${i + 1} mai în față" ${i === 0 ? "disabled" : ""}>${ICONS.left}</button>
+        <button class="ib" type="button" data-a="right" aria-label="Mută pagina ${i + 1} mai în spate" ${i === n - 1 ? "disabled" : ""}>${ICONS.right}</button>
+        <button class="ib" type="button" data-a="del" aria-label="Șterge pagina ${i + 1}">${ICONS.del}</button>
+      </span></div>`;
+    return li;
+  }));
+}
+// confirmare în pagină: prima apăsare armează butonul, a doua execută
+function armed(btn, label, run) {
+  if (btn.classList.contains("armed")) { run(); return; }
+  const old = btn.innerHTML;
+  btn.classList.add("armed"); btn.textContent = label;
+  setTimeout(() => { if (btn.isConnected) { btn.classList.remove("armed"); btn.innerHTML = old; } }, 3000);
+}
+$("#grid").addEventListener("click", e => {
+  const b = e.target.closest("button[data-a]"); if (!b) return;
+  const id = b.closest(".sheet").dataset.id, i = pages.findIndex(p => p.id === id); if (i < 0) return;
+  const a = b.dataset.a;
+  if (a === "edit") { const p = pages[i]; openEditor({ id: p.id, orig: p.orig, w: p.w, h: p.h, corners: p.corners, rot: p.rot, filter: p.filter }); }
+  if (a === "left" && i > 0) { [pages[i - 1], pages[i]] = [pages[i], pages[i - 1]]; persistAll(); renderGrid(); }
+  if (a === "right" && i < pages.length - 1) { [pages[i + 1], pages[i]] = [pages[i], pages[i + 1]]; persistAll(); renderGrid(); }
+  if (a === "del") armed(b, "Sigur?", () => {
+    URL.revokeObjectURL(pages[i].url); pages.splice(i, 1); store.del(id); persistAll(); renderGrid(); toast("Pagina a fost ștearsă.");
+  });
+});
+$("#newDoc").addEventListener("click", e => armed(e.currentTarget, "Șterg toate paginile?", () => {
+  pages.forEach(p => URL.revokeObjectURL(p.url)); pages = []; store.clear();
+  $("#docName").value = todayName(); ls.set("scaner-pdf:nume", "");
+  renderGrid(); toast("Document nou, gol.");
+}));
+$("#docName").addEventListener("input", e => ls.set("scaner-pdf:nume", e.target.value));
+
+// ---------- fotografii ----------
+let pending = Promise.resolve();
+document.querySelectorAll('[data-act="cam"]').forEach(b => b.addEventListener("click", () => $("#camIn").click()));
+document.querySelector('[data-act="gal"]').addEventListener("click", () => $("#galIn").click());
+$("#camIn").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  await pending; openFromBlob(f);
+});
+$("#galIn").addEventListener("change", async e => {
+  const files = [...e.target.files]; e.target.value = "";
+  if (!files.length) return;
+  await pending;
+  if (files.length === 1) { openFromBlob(files[0]); return; }
+  // mai multe poze: le adaug direct, cu colțurile găsite automat; fiecare se poate corecta apoi
+  let ok = 0;
+  for (const [i, f] of files.entries()) {
+    busy(`Pagina ${i + 1} din ${files.length}…`); await nextFrame();
+    try {
+      const o = await prepareOriginal(f);
+      const corners = detectCorners(o.canvas, o.w, o.h) || fullCorners(o.w, o.h);
+      const c = rendered(applyFilter(warp(pixelsOf(o.canvas, o.w, o.h), corners, MAX_OUT), "curat"), 0);
+      await addPage({ id: newId(), orig: o.blob, w: o.w, h: o.h, corners, rot: 0, filter: "curat", out: await toBlob(c, 0.88), ow: c.width, oh: c.height });
+      ok++;
+    } catch { /* trecem la următoarea */ }
+  }
+  unbusy(); renderGrid();
+  toast(ok === files.length ? `Am adăugat ${pagesLabel(ok)}. Atinge o pagină ca s-o corectezi.` : `Am adăugat ${ok} din ${files.length} poze; restul nu s-au putut citi.`);
+});
+async function addPage(p) {
+  const i = pages.findIndex(x => x.id === p.id);
+  const item = { ...p, url: URL.createObjectURL(p.out) };
+  if (i >= 0) { URL.revokeObjectURL(pages[i].url); pages[i] = item; await store.put(rec(item, i)); }
+  else { pages.push(item); await store.put(rec(item, pages.length - 1)); }
+}
+async function openFromBlob(blob) {
+  busy("Se deschide poza…"); await nextFrame();
+  try {
+    const o = await prepareOriginal(blob);
+    await openEditor({ id: null, orig: o.blob, w: o.w, h: o.h, img: o.canvas, corners: null, rot: 0, filter: "curat" });
+  } catch {
+    toast("Nu am putut deschide poza. Încearcă din nou.");
+  } finally { unbusy(); }
+}
+
+// pagina exemplu: o fișă de lucru fotografiată strâmb, pe o masă, cu lumină inegală
+$("#sample").addEventListener("click", async () => {
+  const W = 1200, H = 1600, c = canvasOf(W, H), x = c.getContext("2d");
+  const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, "#6b5442"); g.addColorStop(1, "#2e231b");
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.save(); x.translate(W / 2 + 20, H / 2 + 10); x.rotate(-0.07); x.transform(1, 0.02, -0.05, 1, 0, 0);
+  const pw = 820, ph = 1160;
+  x.shadowColor = "rgba(0,0,0,.45)"; x.shadowBlur = 30; x.shadowOffsetY = 12;
+  x.fillStyle = "#f3f1ea"; x.fillRect(-pw / 2, -ph / 2, pw, ph);
+  x.shadowColor = "transparent";
+  x.translate(-pw / 2 + 70, -ph / 2 + 110);
+  x.fillStyle = "#1d2230"; x.font = "bold 40px Georgia, serif"; x.fillText("Fișă de lucru · Clasa a IX-a", 0, 0);
+  x.font = "28px Georgia, serif"; x.fillStyle = "#3b4150"; x.fillText("Ecuații de gradul I", 0, 52);
+  x.fillRect(0, 78, pw - 140, 2);
+  x.fillStyle = "#1d2230"; x.font = "28px Georgia, serif";
+  ["1. Rezolvați ecuația 3x − 7 = 11.", "2. Aflați x dacă 2(x + 4) = 5x − 1.", "3. Determinați a ∈ ℝ cu |a − 2| = 5.", "4. Ce număr adunat cu triplul lui dă 48?"]
+    .forEach((t, i) => x.fillText(t, 0, 150 + i * 150));
+  x.fillStyle = "#1f3fa8"; x.font = "italic 34px 'Segoe Script', 'Comic Sans MS', cursive";
+  x.fillText("3x = 18  ⇒  x = 6", 40, 205); x.fillText("2x + 8 = 5x − 1  ⇒  x = 3", 40, 355);
+  x.fillText("a = 7  sau  a = −3", 40, 505);
+  x.strokeStyle = "#c62828"; x.lineWidth = 5; x.lineCap = "round";
+  x.beginPath(); x.moveTo(560, 190); x.lineTo(578, 210); x.lineTo(610, 170); x.stroke();
+  x.fillStyle = "#c62828"; x.font = "bold 54px Georgia, serif"; x.fillText("10", pw - 260, 900);
+  x.fillStyle = "#3b4150"; x.font = "24px Georgia, serif"; x.fillText("Nume: ____________________   Data: __________", 0, 960);
+  x.restore();
+  const l = x.createRadialGradient(W * 0.78, H * 0.15, 40, W * 0.55, H * 0.45, W * 1.1);
+  l.addColorStop(0, "rgba(255,248,230,.18)"); l.addColorStop(1, "rgba(0,0,0,.42)");
+  x.fillStyle = l; x.fillRect(0, 0, W, H);
+  openFromBlob(await toBlob(c, 0.9));
+});
+
+// ---------- editorul ----------
+const ed = { open: false, step: 1, id: null, orig: null, img: null, w: 0, h: 0, corners: null, rot: 0, filter: "curat", src: null, warped: null, cache: {}, scale: 1, drag: -1, grab: [0, 0] };
+const frame = $("#frame"), quad = $("#quad"), cropCanvas = $("#cropCanvas"), loupe = $("#loupe"), stage = $("#stage");
+
+$("#chips").innerHTML = FILTERS.map(([k, t]) => `<button class="chip" type="button" data-f="${k}" aria-pressed="false">${t}</button>`).join("");
+
+async function openEditor(o) {
+  Object.assign(ed, { open: true, step: 1, id: o.id, orig: o.orig, w: o.w, h: o.h, rot: o.rot || 0, filter: o.filter || "curat", src: null, warped: null, cache: {}, drag: -1 });
+  ed.img = o.img || await loadImage(o.orig);
+  ed.corners = o.corners ? o.corners.map(p => p.slice()) : (detectCorners(ed.img, ed.w, ed.h) || fullCorners(ed.w, ed.h));
+  $("#save").textContent = o.id ? "Salvează pagina" : "Adaugă pagina";
+  $("#saveMore").hidden = !!o.id;
+  $("#editor").hidden = false;
+  showStep(1);
+}
+function closeEditor() {
+  ed.open = false; ed.img = null; ed.src = null; ed.warped = null; ed.cache = {};
+  $("#prevHost").replaceChildren(); $("#editor").hidden = true;
+}
+function showStep(n) {
+  ed.step = n;
+  $("#ctl1").hidden = n !== 1; $("#ctl2").hidden = n !== 2;
+  frame.hidden = n !== 1; $("#prevHost").hidden = n !== 2;
+  $("#edTitle").textContent = n === 1 ? "Potrivește colțurile foii" : "Cum să arate pagina";
+  $("#edHint").textContent = n === 1
+    ? "Trage de cercurile galbene până ajung în colțurile foii."
+    : "„Curat color” albește hârtia și păstrează pixul roșu sau albastru.";
+  layout();
+}
+function fit(w, h) {
+  const r = stage.getBoundingClientRect(), cs = getComputedStyle(stage);
+  const aw = r.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const ah = r.height - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  const s = Math.max(0.01, Math.min(aw / w, ah / h));
+  return { s, dw: Math.max(1, Math.floor(w * s)), dh: Math.max(1, Math.floor(h * s)) };
+}
+function layout() {
+  if (!ed.open) return;
+  if (ed.step === 1) {
+    const { s, dw, dh } = fit(ed.w, ed.h), dpr = Math.min(2, window.devicePixelRatio || 1);
+    ed.scale = s;
+    frame.style.width = dw + "px"; frame.style.height = dh + "px";
+    cropCanvas.width = Math.round(dw * dpr); cropCanvas.height = Math.round(dh * dpr);
+    cropCanvas.getContext("2d").drawImage(ed.img, 0, 0, cropCanvas.width, cropCanvas.height);
+    quad.setAttribute("viewBox", `0 0 ${ed.w} ${ed.h}`);
+    drawQuad();
+  } else {
+    const c = $("#prevHost").firstChild; if (!c) return;
+    const { dw, dh } = fit(c.width, c.height);
+    c.style.width = dw + "px"; c.style.height = dh + "px";
+  }
+}
+addEventListener("resize", () => requestAnimationFrame(layout));
+
+function drawQuad() {
+  const q = ed.corners, sw = 2 / ed.scale, r = 13 / ed.scale;
+  quad.innerHTML =
+    `<path class="q-mask" d="M0 0H${ed.w}V${ed.h}H0Z M${q.map(p => p.join(" ")).join(" L")}Z"/>` +
+    `<polygon class="q-line" points="${q.map(p => p.join(",")).join(" ")}" stroke-width="${sw}"/>` +
+    q.map((p, i) => `<circle class="q-dot" cx="${p[0]}" cy="${p[1]}" r="${ed.drag === i ? r * 1.35 : r}" stroke-width="${sw * 1.3}"/>`).join("");
+}
+function toImg(e) {
+  const r = frame.getBoundingClientRect();
+  return [(e.clientX - r.left) / r.width * ed.w, (e.clientY - r.top) / r.height * ed.h];
+}
+function drawLoupe() {
+  const p = ed.corners[ed.drag], L = loupe.width, x = loupe.getContext("2d");
+  const span = 118 / (ed.scale * 3);    // de 3 ori mai aproape decât pe ecran
+  x.fillStyle = "#0d111c"; x.fillRect(0, 0, L, L);
+  x.drawImage(ed.img, p[0] - span / 2, p[1] - span / 2, span, span, 0, 0, L, L);
+  x.strokeStyle = "#ffd23f"; x.lineWidth = 2;
+  x.beginPath(); x.moveTo(L / 2, L / 2 - 26); x.lineTo(L / 2, L / 2 + 26); x.moveTo(L / 2 - 26, L / 2); x.lineTo(L / 2 + 26, L / 2); x.stroke();
+  const left = p[0] > ed.w / 2;
+  loupe.style.left = left ? "max(16px, env(safe-area-inset-left, 0px))" : "auto";
+  loupe.style.right = left ? "auto" : "max(16px, env(safe-area-inset-right, 0px))";
+}
+quad.addEventListener("pointerdown", e => {
+  const p = toImg(e);
+  let best = -1, bd = Infinity;
+  ed.corners.forEach((c, i) => { const d = Math.hypot(c[0] - p[0], c[1] - p[1]); if (d < bd) { bd = d; best = i; } });
+  if (bd * ed.scale > 80) return;
+  ed.drag = best; ed.grab = [ed.corners[best][0] - p[0], ed.corners[best][1] - p[1]];
+  quad.setPointerCapture(e.pointerId); e.preventDefault();
+  loupe.hidden = false; drawLoupe(); drawQuad();
+});
+quad.addEventListener("pointermove", e => {
+  if (ed.drag < 0) return;
+  const p = toImg(e);
+  ed.corners[ed.drag] = [Math.min(ed.w, Math.max(0, p[0] + ed.grab[0])), Math.min(ed.h, Math.max(0, p[1] + ed.grab[1]))];
+  drawQuad(); drawLoupe();
+});
+const endDrag = () => { if (ed.drag < 0) return; ed.drag = -1; loupe.hidden = true; drawQuad(); };
+quad.addEventListener("pointerup", endDrag);
+quad.addEventListener("pointercancel", endDrag);
+
+$("#fullImg").addEventListener("click", () => { ed.corners = fullCorners(ed.w, ed.h); drawQuad(); });
+$("#autoDetect").addEventListener("click", () => {
+  const q = detectCorners(ed.img, ed.w, ed.h);
+  if (q) { ed.corners = q; drawQuad(); } else toast("Nu am găsit marginile foii. Trage colțurile cu degetul.");
+});
+$("#toStep2").addEventListener("click", async () => {
+  busy("Se îndreaptă pagina…"); await nextFrame();
+  try {
+    if (!ed.src) ed.src = pixelsOf(ed.img, ed.w, ed.h);
+    ed.warped = warp(ed.src, ed.corners, MAX_OUT); ed.cache = {};
+    showStep(2); renderPreview();
+  } catch { toast("Colțurile nu formează o foaie. Mută-le și încearcă din nou."); }
+  unbusy();
+});
+function processed() { return ed.cache[ed.filter] || (ed.cache = { [ed.filter]: applyFilter(ed.warped, ed.filter) })[ed.filter]; }
+function renderPreview() {
+  document.querySelectorAll(".chip").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.f === ed.filter)));
+  $("#prevHost").replaceChildren(rendered(processed(), ed.rot));
+  layout();
+}
+$("#chips").addEventListener("click", async e => {
+  const b = e.target.closest(".chip"); if (!b || b.dataset.f === ed.filter) return;
+  ed.filter = b.dataset.f; busy("Se aplică…"); await nextFrame(); renderPreview(); unbusy();
+});
+$("#rotate").addEventListener("click", () => { ed.rot = (ed.rot + 1) % 4; renderPreview(); });
+$("#back").addEventListener("click", () => showStep(1));
+$("#edClose").addEventListener("click", closeEditor);
+
+async function commit() {
+  const c = rendered(processed(), ed.rot);
+  const page = { id: ed.id || newId(), orig: ed.orig, w: ed.w, h: ed.h, corners: ed.corners, rot: ed.rot, filter: ed.filter, out: await toBlob(c, 0.88), ow: c.width, oh: c.height };
+  const isNew = !ed.id;
+  closeEditor();
+  await addPage(page); renderGrid();
+  if (isNew) { const m = $("#main"); m.scrollTop = m.scrollHeight; }
+  toast(isNew ? `Pagina ${pages.length} a fost adăugată.` : "Pagina a fost actualizată.");
+}
+$("#save").addEventListener("click", () => { pending = commit(); });
+$("#saveMore").addEventListener("click", () => {
+  $("#camIn").click();   // deschid camera în același gest, cât timp pagina se salvează
+  pending = commit();
+});
+
+// ---------- PDF ----------
+let dlCap = null;
+const downloads = () => inArtifact ? (dlCap || (dlCap = window.claude.use("downloads").catch(() => null))) : Promise.resolve(null);
+const canShareFiles = (() => {
+  if (inArtifact || !navigator.canShare) return false;
+  try { return navigator.canShare({ files: [new File(["x"], "t.pdf", { type: "application/pdf" })] }); } catch { return false; }
+})();
+const fileName = () => ($("#fileName").value.replace(/[\\/:*?"<>|]+/g, "-").trim() || "Scanare") + ".pdf";
+
+$("#openPdf").addEventListener("click", () => {
+  if (!pages.length) return;
+  $("#fileName").value = $("#docName").value.trim() || todayName();
+  pdfBlob = null; $("#pdfReady").hidden = true; $("#pdfActions").hidden = false;
+  $("#pdfSheet").hidden = false; downloads();
+});
+$("#pdfCancel").addEventListener("click", () => { $("#pdfSheet").hidden = true; });
+$("#pdfSheet").addEventListener("click", e => { if (e.target.id === "pdfSheet") $("#pdfSheet").hidden = true; });
+$("#pdfSheet").addEventListener("change", e => {
+  if (e.target.name) { pdfBlob = null; $("#pdfReady").hidden = true; $("#pdfActions").hidden = false; }
+});
+$("#pdfMake").addEventListener("click", async () => {
+  if (!window.jspdf) { toast("Partea care face PDF-ul nu s-a încărcat. Verifică internetul și redeschide pagina."); return; }
+  const a4 = $("#szA4").checked, small = $("#qLo").checked;
+  try {
+    let doc = null;
+    for (const [i, p] of pages.entries()) {
+      busy(`Pagina ${i + 1} din ${pages.length}…`); await nextFrame();
+      let blob = p.out, w = p.ow, h = p.oh;
+      if (small) {
+        const img = await loadImage(p.out), k = Math.min(1, 1400 / Math.max(w, h));
+        w = Math.round(w * k); h = Math.round(h * k);
+        const c = canvasOf(w, h); c.getContext("2d").drawImage(img, 0, 0, w, h);
+        blob = await toBlob(c, 0.7);
+      }
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      const land = w > h, orientation = land ? "landscape" : "portrait";
+      let pw, ph, format;
+      if (a4) { pw = land ? 297 : 210; ph = land ? 210 : 297; format = "a4"; }
+      else { const k = 297 / Math.max(w, h); pw = w * k; ph = h * k; format = [pw, ph]; }
+      if (!doc) doc = new window.jspdf.jsPDF({ unit: "mm", format, orientation, compress: true });
+      else doc.addPage(format, orientation);
+      const s = Math.min(pw / w, ph / h), dw = w * s, dh = h * s;
+      doc.addImage(bytes, "JPEG", (pw - dw) / 2, (ph - dh) / 2, dw, dh, undefined, "NONE");
+    }
+    doc.setProperties({ title: $("#fileName").value.trim() || "Scanare", creator: "Scaner PDF" });
+    pdfBlob = doc.output("blob");
+    $("#pdfInfo").textContent = `· ${pagesLabel(pages.length)} · ${sizeLabel(pdfBlob.size)}`;
+    $("#pdfShare").hidden = !canShareFiles;
+    $("#pdfActions").hidden = true; $("#pdfReady").hidden = false;
+  } catch {
+    toast("PDF-ul nu a putut fi creat. Încearcă cu „Fișier mic”.");
+  } finally { unbusy(); }
+});
+$("#pdfSave").addEventListener("click", async () => {
+  if (!pdfBlob) return;
+  const name = fileName(), dl = await downloads();
+  if (dl) {
+    try { await dl.save({ filename: name, data: pdfBlob }); toast("PDF salvat."); }
+    catch (e) { if (!e || e.code !== "declined") toast("Salvarea nu a mers aici. Deschide aplicația instalată ca să salvezi."); }
+    return;
+  }
+  if (inArtifact) { toast("Salvarea nu e disponibilă în această previzualizare."); return; }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(pdfBlob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  toast("PDF salvat în Descărcări.");
+});
+$("#pdfShare").addEventListener("click", async () => {
+  if (!pdfBlob) return;
+  try { await navigator.share({ files: [new File([pdfBlob], fileName(), { type: "application/pdf" })], title: fileName() }); }
+  catch (e) { if (e && e.name !== "AbortError") toast("Trimiterea nu a mers. Salvează PDF-ul și trimite-l din galerie."); }
+});
+
+addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  if (!$("#pdfSheet").hidden) $("#pdfSheet").hidden = true;
+  else if (ed.open) closeEditor();
+});
+
+// ---------- pornire ----------
+(async () => {
+  $("#docName").value = ls.get("scaner-pdf:nume") || todayName();
+  const saved = (await store.all()) || [];
+  pages = saved.sort((a, b) => a.order - b.order).map(p => ({ ...p, url: URL.createObjectURL(p.out) }));
+  renderGrid();
+})();
+})();
+</script>
+<script>if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+</body>
+</html>
