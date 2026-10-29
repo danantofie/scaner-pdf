@@ -1,5 +1,7 @@
 # Scaner PDF
 
+Aplicația: **https://danantofie.github.io/scaner-pdf/**
+
 Aplicație web pentru telefon și tabletă: fotografiezi foi de hârtie, aplicația găsește colțurile, îndreaptă pagina, albește hârtia și face din toate paginile un PDF.
 
 - Merge pe Android, iPhone și pe tableta Huawei (din browser), fără magazin de aplicații.
@@ -18,7 +20,7 @@ Aplicație web pentru telefon și tabletă: fotografiezi foi de hârtie, aplica�
 
 1. Pe GitHub, în repository: **Settings → Pages**.
 2. La **Source** alegi **Deploy from a branch**, ramura `main`, folderul `/docs`, apoi **Save**.
-3. După 1–2 minute aplicația apare la `https://NUMELE-TAU.github.io/scaner-pdf/`.
+3. După 1–2 minute aplicația apare la https://danantofie.github.io/scaner-pdf/
 
 Link-ul acesta îl trimiți oricui. Pe telefon, din meniul browserului: **Adaugă pe ecranul de pornire** / **Instalează aplicația**.
 
