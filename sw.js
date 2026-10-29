@@ -1,5 +1,5 @@
 // Păstrează aplicația pe telefon, ca să meargă și fără internet.
-const VERSIUNE = "scaner-pdf-v1";
+const VERSIUNE = "scaner-pdf-v2";
 const FISIERE = ["./", "index.html", "jspdf.umd.min.js", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {

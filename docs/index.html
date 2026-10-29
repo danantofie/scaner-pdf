@@ -17,10 +17,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-/* Layout: o coloană de aplicație — antet cu numele documentului, foile în grilă, bară de acțiuni jos; editorul se deschide peste tot ecranul, pe fundal închis, ca o masă de lucru luminată. */
+/* Layout: o coloană de aplicație — antet cu numele documentului, foile în grilă, bară de acțiuni jos; camera, editorul și corectarea se deschid peste tot ecranul. */
 :root{
   --paper:#eef1f6; --surface:#ffffff; --ink:#141b2e; --muted:#5a6479; --line:#d5dbe6;
-  --accent:#2b4acb; --accent-ink:#ffffff; --accent-soft:#e2e8fb; --danger:#b42318; --sheet:#ffffff;
+  --accent:#2b4acb; --accent-ink:#ffffff; --accent-soft:#e2e8fb; --danger:#b42318; --ok:#1a7f4b; --ok-soft:#dff3e7; --sheet:#ffffff;
   --stage:#0d111c; --stage-ink:#e9ecf4; --stage-muted:#9aa3b8; --stage-line:#2c3347; --handle:#ffd23f;
   --font-display:"Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
   --font-body:"IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -30,19 +30,19 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --paper:#0f1322; --surface:#171c2d; --ink:#e8ebf4; --muted:#9aa3b8; --line:#2a3147;
-    --accent:#8ea4ff; --accent-ink:#0b1020; --accent-soft:#1f2850; --danger:#ff8a7a; --sheet:#ffffff;
+    --accent:#8ea4ff; --accent-ink:#0b1020; --accent-soft:#1f2850; --danger:#ff8a7a; --ok:#5fd394; --ok-soft:#173627; --sheet:#ffffff;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --paper:#0f1322; --surface:#171c2d; --ink:#e8ebf4; --muted:#9aa3b8; --line:#2a3147;
-  --accent:#8ea4ff; --accent-ink:#0b1020; --accent-soft:#1f2850; --danger:#ff8a7a; --sheet:#ffffff;
+  --accent:#8ea4ff; --accent-ink:#0b1020; --accent-soft:#1f2850; --danger:#ff8a7a; --ok:#5fd394; --ok-soft:#173627; --sheet:#ffffff;
   color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.45 var(--font-body);-webkit-tap-highlight-color:transparent}
-button,input{font:inherit;color:inherit}
+button,input,textarea,select{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -55,6 +55,7 @@ button{cursor:pointer}
 .top .wrap{display:grid;grid-template-columns:1fr auto;gap:6px 12px;padding-block:10px 12px}
 .brand{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-weight:700;font-size:19px;letter-spacing:-.01em}
 .brand svg{width:26px;height:26px;flex:none}
+.topacts{display:flex;gap:2px;align-items:center}
 .docname{grid-column:1 / -1;display:flex;align-items:baseline;gap:10px;min-width:0}
 .docname input{flex:1;min-width:0;border:0;border-bottom:1px dashed var(--line);background:transparent;padding:4px 0;font-weight:600;font-size:17px}
 .docname input:focus{outline:none;border-bottom:1px solid var(--accent)}
@@ -93,19 +94,20 @@ main .wrap{padding-block:18px 28px}
 .bar .wrap{display:flex;gap:8px;padding-block:10px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 16px;border-radius:var(--radius);border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;text-align:center}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.good{background:var(--ok);border-color:var(--ok);color:#fff}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .btn svg{width:20px;height:20px;flex:none}
 .bar .btn{flex:1;min-width:0;flex-direction:column;gap:2px;font-size:13px;min-height:58px;padding:6px 8px}
 .bar .btn svg{width:22px;height:22px}
 
-/* editor */
-.editor{position:fixed;inset:0;z-index:40;background:var(--stage);color:var(--stage-ink);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+/* camera și editorul: masa de lucru întunecată */
+.stage-screen{position:fixed;inset:0;z-index:40;background:var(--stage);color:var(--stage-ink);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 .ed-top .wrap{display:flex;align-items:flex-start;gap:12px;padding-block:12px 6px}
 .ed-title{flex:1;min-width:0}
 .ed-title h2{margin:0;font-family:var(--font-display);font-weight:600;font-size:19px;letter-spacing:-.01em}
 .ed-title p{margin:2px 0 0;font-size:13px;color:var(--stage-muted)}
-.editor .ib{color:var(--stage-ink)}
-.editor .ib:hover{background:var(--stage-line)}
+.stage-screen .ib{color:var(--stage-ink)}
+.stage-screen .ib:hover{background:var(--stage-line)}
 .ed-stage{flex:1;min-height:0;position:relative;display:grid;place-items:center;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));overflow:hidden}
 .frame{position:relative;touch-action:none;user-select:none;-webkit-user-select:none}
 .frame canvas{display:block;width:100%;height:100%}
@@ -119,20 +121,78 @@ main .wrap{padding-block:18px 28px}
 .ed-controls .wrap{display:grid;gap:10px;padding-block:8px 14px}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .row .grow{flex:1 1 auto}
-.editor .btn{background:transparent;border-color:var(--stage-line);color:var(--stage-ink)}
-.editor .btn.primary{background:var(--handle);border-color:var(--handle);color:var(--stage)}
+.stage-screen .btn{background:transparent;border-color:var(--stage-line);color:var(--stage-ink)}
+.stage-screen .btn.primary{background:var(--handle);border-color:var(--handle);color:var(--stage)}
 .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
 .chip{flex:none;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--stage-line);background:transparent;color:var(--stage-ink);font-weight:500}
 .chip[aria-pressed="true"]{background:var(--stage-ink);border-color:var(--stage-ink);color:var(--stage)}
 
-/* fereastra PDF */
+/* camera live */
+.cam-stage{flex:1;min-height:0;position:relative;display:grid;place-items:center;overflow:hidden;background:#000}
+.cam-stage video{max-width:100%;max-height:100%;width:auto;height:auto;display:block}
+.cam-frame{position:relative;display:inline-block;line-height:0}
+.cam-frame svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.cam-frame .q-line{stroke-width:3;vector-effect:non-scaling-stroke}
+.cam-frame .q-line.stable{stroke:#5fd394}
+.cam-frame .q-fill{fill:rgba(255,210,63,.14)}
+.cam-frame .q-fill.stable{fill:rgba(95,211,148,.18)}
+.cam-status{position:absolute;left:50%;transform:translateX(-50%);top:14px;max-width:calc(100% - 32px);padding:8px 14px;border-radius:999px;background:rgba(13,17,28,.78);color:var(--stage-ink);font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cam-bar .wrap{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;padding-block:14px}
+.shutter{width:74px;height:74px;border-radius:50%;border:4px solid var(--stage-ink);background:transparent;display:grid;place-items:center;padding:0;justify-self:center}
+.shutter::after{content:"";width:56px;height:56px;border-radius:50%;background:var(--stage-ink);transition:transform .12s}
+.shutter:active::after{transform:scale(.86)}
+.shutter:disabled{opacity:.4}
+.cam-bar .left{display:flex;gap:6px;justify-self:start}
+.cam-bar .right{display:flex;gap:6px;justify-self:end;align-items:center}
+.cam-bar .chip{min-height:38px;padding:0 12px;font-size:13px}
+.cam-count{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;font-family:var(--font-display);font-size:120px;font-weight:700;color:rgba(255,255,255,.85);text-shadow:0 4px 30px rgba(0,0,0,.6)}
+
+/* corectarea: panou luminos, peste tot ecranul */
+.panel{position:fixed;inset:0;z-index:40;background:var(--paper);color:var(--ink);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.panel .ed-top{background:var(--surface);border-bottom:1px solid var(--line)}
+.panel .ed-title p{color:var(--muted)}
+.panel .ib{color:var(--ink)}
+.panel .ib:hover{background:var(--accent-soft)}
+.panel-body{flex:1;min-height:0;overflow-y:auto}
+.panel-body .wrap{display:grid;gap:18px;padding-block:16px 32px;max-width:760px}
+.field{display:grid;gap:6px}
+.field>label,.field legend,.lbl{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:0}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+.inp{border:1px solid var(--line);border-radius:var(--radius);padding:11px 12px;background:var(--surface);font-size:16px;width:100%;min-width:0}
+.inp:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+textarea.inp{min-height:150px;resize:vertical;font-family:var(--font-mono);font-size:14px;line-height:1.5}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:480px){.two{grid-template-columns:1fr}}
+.pages-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.pages-strip img{height:92px;width:auto;border:1px solid var(--line);border-radius:3px;background:var(--sheet);flex:none}
+.notice{padding:12px 14px;border-radius:var(--radius);background:var(--accent-soft);font-size:14px;display:grid;gap:4px}
+.notice.warn{background:#fff3d6;color:#5a3d00}
+:root:not([data-theme="light"]) .notice.warn{background:#3a2d10;color:#ffd98a}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .notice.warn{background:#fff3d6;color:#5a3d00}}
+.res{display:grid;gap:12px}
+.res-head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between}
+.res-head h3{margin:0;font-family:var(--font-display);font-size:20px}
+.total{font-family:var(--font-mono);font-size:22px;font-weight:500;font-variant-numeric:tabular-nums}
+.total small{font-size:14px;color:var(--muted)}
+.prob{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.prob.unsure{border-color:#e0a800}
+.prob h4{margin:0;font-size:15px;grid-column:1}
+.prob .pts{grid-column:2;grid-row:1 / span 3;display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-variant-numeric:tabular-nums;align-self:start}
+.prob .pts input{width:64px;text-align:right;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--paper);font-family:var(--font-mono);font-size:16px}
+.prob p{margin:0;font-size:14px;grid-column:1}
+.prob .obs{color:var(--muted)}
+.prob .flag{font-size:12px;color:#8a6100;font-weight:600;grid-column:1}
+.results-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.results-list li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:14px}
+.results-list li .meta{display:block}
+.results-list li b{font-family:var(--font-mono);font-weight:500;font-variant-numeric:tabular-nums}
+
+/* ferestre */
 .scrim{position:fixed;inset:0;z-index:50;background:rgba(8,11,20,.55);display:flex;align-items:flex-end;justify-content:center}
 .card{width:100%;max-width:540px;background:var(--surface);color:var(--ink);border-radius:16px 16px 0 0;padding-block:20px calc(20px + env(safe-area-inset-bottom,0px));padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:grid;gap:16px;max-height:100%;overflow-y:auto}
 @media (min-width:640px){.scrim{align-items:center}.card{border-radius:16px;padding-bottom:20px}}
 .card h2{margin:0;font-family:var(--font-display);font-size:22px;letter-spacing:-.01em}
-.field{display:grid;gap:6px}
-.field>label,.field legend{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:0}
-fieldset{border:0;margin:0;padding:0;min-width:0}
 .fname{display:flex;align-items:center;border:1px solid var(--line);border-radius:var(--radius);padding:0 12px;background:var(--paper)}
 .fname input{flex:1;min-width:0;border:0;background:transparent;padding:12px 0;font-size:16px}
 .fname input:focus{outline:none}
@@ -150,7 +210,7 @@ fieldset{border:0;margin:0;padding:0;min-width:0}
 .ready p span{font-family:var(--font-mono);font-weight:500;font-size:13px;color:var(--muted)}
 
 /* stări */
-.busy{position:fixed;inset:0;z-index:70;display:grid;place-items:center;align-content:center;gap:14px;background:rgba(8,11,20,.72);color:#eef1f8;font-weight:500}
+.busy{position:fixed;inset:0;z-index:70;display:grid;place-items:center;align-content:center;gap:14px;background:rgba(8,11,20,.72);color:#eef1f8;font-weight:500;padding:0 24px;text-align:center}
 .spin{width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.25);border-top-color:var(--handle);animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion: reduce){.spin{animation:none}}
@@ -164,9 +224,14 @@ fieldset{border:0;margin:0;padding:0;min-width:0}
         <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M10 7h9l5 5v13H10z" fill="var(--sheet)"/><path d="M19 7v5h5" fill="none" stroke="var(--accent)" stroke-width="1.5"/><path d="M7 10V7h3M25 22v3h-3M7 22v3h3" fill="none" stroke="var(--handle)" stroke-width="2.2" stroke-linecap="round"/></svg>
         Scaner PDF
       </div>
-      <button class="linkbtn" id="newDoc" type="button" hidden>Document nou</button>
+      <div class="topacts">
+        <button class="linkbtn" id="newDoc" type="button" hidden>Document nou</button>
+        <button class="ib" type="button" id="openSettings" aria-label="Setări">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        </button>
+      </div>
       <div class="docname">
-        <label for="docName" class="vh">Numele documentului</label>
+        <label for="docName" class="vh">Numele lucrării</label>
         <input id="docName" type="text" autocomplete="off" spellcheck="false">
         <span class="meta" id="meta">0 pagini</span>
       </div>
@@ -186,12 +251,12 @@ fieldset{border:0;margin:0;padding:0;min-width:0}
             <circle cx="36" cy="19" r="5"/><circle cx="94" cy="12" r="5"/><circle cx="104" cy="92" r="5"/><circle cx="46" cy="99" r="5"/>
           </g>
         </svg>
-        <h1>Fotografiază o foaie și fă din ea un PDF curat.</h1>
+        <h1>Fotografiază lucrarea. Aplicația o îndreaptă, o face PDF și o corectează după barem.</h1>
         <ol class="steps">
-          <li>Fotografiază pagina cu telefonul sau tableta.</li>
-          <li>Potrivește colțurile foii. Aplicația le caută singură.</li>
-          <li>Alege cum arată: curat color, alb-negru sau gri.</li>
-          <li>Adaugă câte pagini vrei, apoi creează PDF-ul.</li>
+          <li>Ține telefonul deasupra foii. Aplicația găsește singură marginile și face poza.</li>
+          <li>Verifică colțurile și alege cum arată pagina: curat color, alb-negru sau gri.</li>
+          <li>Adaugă toate paginile lucrării, apoi creează PDF-ul.</li>
+          <li>Scrie baremul și cere corectarea. Tu validezi punctajul propus.</li>
         </ol>
         <div class="empty-actions">
           <button class="btn primary" type="button" data-act="cam">
@@ -200,7 +265,7 @@ fieldset{border:0;margin:0;padding:0;min-width:0}
           </button>
           <button class="btn" type="button" id="sample">Încearcă pe o pagină exemplu</button>
         </div>
-        <p>Paginile rămân doar pe dispozitivul tău. Nu se trimit nicăieri până nu trimiți tu PDF-ul.</p>
+        <p>Paginile rămân pe dispozitivul tău. Pleacă de aici doar când trimiți PDF-ul sau când ceri corectarea, cu cheia ta.</p>
       </section>
       <ol class="grid" id="grid" hidden></ol>
     </div>
@@ -216,9 +281,13 @@ fieldset{border:0;margin:0;padding:0;min-width:0}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="m4 16 5-5 4 4 2-2 5 5"/><circle cx="15.5" cy="9.5" r="1.5"/></svg>
         Din galerie
       </button>
+      <button class="btn" type="button" id="openGrade" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>
+        Corectează
+      </button>
       <button class="btn" type="button" id="openPdf" disabled>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg>
-        <span id="pdfLabel">Creează PDF</span>
+        <span id="pdfLabel">PDF</span>
       </button>
     </div>
   </nav>
@@ -227,7 +296,33 @@ fieldset{border:0;margin:0;padding:0;min-width:0}
 <input type="file" id="camIn" class="vh" accept="image/*" capture="environment" tabindex="-1" aria-hidden="true">
 <input type="file" id="galIn" class="vh" accept="image/*" multiple tabindex="-1" aria-hidden="true">
 
-<section class="editor" id="editor" hidden aria-labelledby="edTitle">
+<!-- camera live -->
+<section class="stage-screen" id="cam" hidden aria-label="Camera">
+  <div class="cam-stage" id="camStage">
+    <div class="cam-frame" id="camFrame">
+      <video id="camVideo" playsinline muted autoplay></video>
+      <svg id="camQuad" aria-hidden="true"></svg>
+    </div>
+    <div class="cam-status" id="camStatus">Pornesc camera…</div>
+    <div class="cam-count" id="camCount" hidden></div>
+  </div>
+  <div class="cam-bar">
+    <div class="wrap">
+      <div class="left">
+        <button class="ib" type="button" id="camClose" aria-label="Închide camera">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <button class="shutter" type="button" id="shutter" aria-label="Fă poza"></button>
+      <div class="right">
+        <button class="chip" type="button" id="camAuto" aria-pressed="true">Auto</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- editorul de pagină -->
+<section class="stage-screen" id="editor" hidden aria-labelledby="edTitle">
   <div class="ed-top">
     <div class="wrap">
       <div class="ed-title">
@@ -272,6 +367,101 @@ fieldset{border:0;margin:0;padding:0;min-width:0}
   </div>
 </section>
 
+<!-- corectarea -->
+<section class="panel" id="grade" hidden aria-labelledby="gradeTitle">
+  <div class="ed-top">
+    <div class="wrap">
+      <div class="ed-title">
+        <h2 id="gradeTitle">Corectare după barem</h2>
+        <p>AI-ul propune punctajul pe fiecare problemă. Tu îl verifici și îl validezi.</p>
+      </div>
+      <button class="ib" type="button" id="gradeClose" aria-label="Închide">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="panel-body">
+    <div class="wrap">
+      <div class="notice warn" id="noKey" hidden>
+        <strong>Lipsește cheia API.</strong>
+        <span>Corectarea trimite pozele la Anthropic cu cheia ta. Pune cheia în <button class="linkbtn" type="button" id="toSettings">Setări</button>.</span>
+      </div>
+      <div class="pages-strip" id="gradePages"></div>
+      <div class="two">
+        <div class="field">
+          <label for="gLucrare">Lucrarea</label>
+          <input class="inp" id="gLucrare" type="text" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="gElev">Codul elevului</label>
+          <input class="inp" id="gElev" type="text" autocomplete="off" placeholder="de ex. 9A-07">
+          <p class="hint">Folosește un cod, nu numele. Numele rămâne la tine, în catalog.</p>
+        </div>
+      </div>
+      <div class="field">
+        <label for="gBarem">Baremul</label>
+        <textarea class="inp" id="gBarem" placeholder="1. (5p) Rezolvați ecuația 3x − 7 = 11.&#10;   Izolarea termenului: 2p · Împărțirea: 2p · Rezultat x = 6: 1p&#10;2. (5p) …"></textarea>
+        <p class="hint">Scrie fiecare problemă cu punctajul ei și, dacă vrei, punctele pe pași. Baremul se păstrează pentru lucrarea cu numele acesta.</p>
+      </div>
+      <div class="row">
+        <button class="btn primary" type="button" id="runGrade">Corectează cu AI</button>
+        <span class="hint" id="gradeCost"></span>
+      </div>
+
+      <section class="res" id="gradeRes" hidden>
+        <div class="res-head">
+          <h3>Punctaj propus</h3>
+          <div class="total"><span id="gTotal">0</span> <small>/ <span id="gMax">0</span> p</small></div>
+        </div>
+        <p class="hint" id="gNote"></p>
+        <div id="gProbs" class="res"></div>
+        <div class="row">
+          <button class="btn good" type="button" id="gValidate">Validez și salvez</button>
+          <button class="btn" type="button" id="gDiscard">Renunț</button>
+        </div>
+      </section>
+
+      <section class="field" id="savedWrap" hidden>
+        <span class="lbl">Rezultate validate <span id="savedCount"></span></span>
+        <ul class="results-list" id="savedList"></ul>
+        <div class="row">
+          <button class="btn" type="button" id="expCsv">Export CSV (pentru Sheets)</button>
+          <button class="btn" type="button" id="expJson">Export JSON (pentru platformă)</button>
+          <button class="btn" type="button" id="clearSaved">Șterge rezultatele</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- setări -->
+<div class="scrim" id="settings" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+    <h2 id="setTitle">Setări</h2>
+    <div class="field">
+      <label for="sKey">Cheia API Anthropic</label>
+      <input class="inp" id="sKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
+      <p class="hint">Se păstrează doar în acest browser. Corectarea costă câțiva cenți pe lucrare, plătiți din contul tău Anthropic.</p>
+    </div>
+    <div class="two">
+      <div class="field">
+        <label for="sMpId">Mathpix app_id (opțional)</label>
+        <input class="inp" id="sMpId" type="text" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="sMpKey">Mathpix app_key (opțional)</label>
+        <input class="inp" id="sMpKey" type="password" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+    <p class="hint">Cu Mathpix, scrisul de mână e citit întâi de Mathpix, iar textul e dat AI-ului alături de poze. Fără Mathpix, AI-ul citește pozele direct.</p>
+    <div class="row">
+      <button class="btn" type="button" id="setCancel">Renunță</button>
+      <button class="btn primary" type="button" id="setSave">Salvează</button>
+    </div>
+  </div>
+</div>
+
+<!-- fereastra PDF -->
 <div class="scrim" id="pdfSheet" hidden>
   <div class="card" role="dialog" aria-modal="true" aria-labelledby="pdfTitle">
     <h2 id="pdfTitle">Creează PDF</h2>
@@ -317,8 +507,10 @@ fieldset{border:0;margin:0;padding:0;min-width:0}
 const $ = s => document.querySelector(s);
 const MAX_ORIG = 2400;   // latura lungă a fotografiei păstrate
 const MAX_OUT = 2000;    // latura lungă a paginii îndreptate (~240 dpi pe A4)
+const MAX_AI = 1600;     // latura lungă a pozei trimise la corectare
 const FILTERS = [["curat", "Curat color"], ["ab", "Alb-negru"], ["gri", "Gri"], ["original", "Original"]];
 const inArtifact = !!(window.claude && typeof window.claude.use === "function");
+const MODEL = "claude-opus-5-5";
 
 let pages = [];          // {id, orig, w, h, corners, rot, filter, out, ow, oh, url}
 let pdfBlob = null;
@@ -327,32 +519,41 @@ let pdfBlob = null;
 const store = (() => {
   let dbp = null;
   const open = () => dbp || (dbp = new Promise((res, rej) => {
-    const r = indexedDB.open("scaner-pdf", 1);
-    r.onupgradeneeded = () => r.result.createObjectStore("pagini", { keyPath: "id" });
+    const r = indexedDB.open("scaner-pdf", 2);
+    r.onupgradeneeded = () => {
+      const db = r.result;
+      if (!db.objectStoreNames.contains("pagini")) db.createObjectStore("pagini", { keyPath: "id" });
+      if (!db.objectStoreNames.contains("rezultate")) db.createObjectStore("rezultate", { keyPath: "id" });
+    };
     r.onsuccess = () => res(r.result);
     r.onerror = () => rej(r.error);
   }));
-  async function run(mode, fn) {
+  async function run(name, mode, fn) {
     const db = await open();
     return new Promise((res, rej) => {
-      const t = db.transaction("pagini", mode);
-      const req = fn(t.objectStore("pagini"));
+      const t = db.transaction(name, mode);
+      const req = fn(t.objectStore(name));
       t.oncomplete = () => res(req && req.result);
       t.onerror = t.onabort = () => rej(t.error);
     });
   }
   const safe = f => f().catch(() => null);
-  return {
-    all: () => safe(() => run("readonly", s => s.getAll())),
-    put: rec => safe(() => run("readwrite", s => s.put(rec))),
-    del: id => safe(() => run("readwrite", s => s.delete(id))),
-    clear: () => safe(() => run("readwrite", s => s.clear())),
-  };
+  const api = name => ({
+    all: () => safe(() => run(name, "readonly", s => s.getAll())),
+    put: rec => safe(() => run(name, "readwrite", s => s.put(rec))),
+    del: id => safe(() => run(name, "readwrite", s => s.delete(id))),
+    clear: () => safe(() => run(name, "readwrite", s => s.clear())),
+  });
+  return { pagini: api("pagini"), rezultate: api("rezultate") };
 })();
 const ls = {
   get(k) { try { return localStorage.getItem(k); } catch { return null; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch {} },
 };
+const settings = (() => { try { return JSON.parse(ls.get("scaner-pdf:setari") || "{}") || {}; } catch { return {}; } })();
+
+// prefixare din URL (platforma poate deschide scannerul cu ?lucrare=…&elev=…)
+const urlq = new URLSearchParams(location.search);
 
 // ---------- mărunțișuri ----------
 const nextFrame = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
@@ -380,15 +581,71 @@ function sizeLabel(b) {
 }
 function todayName() {
   const d = new Date(), p = n => String(n).padStart(2, "0");
-  return `Scanare ${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()}`;
+  return `Lucrare ${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()}`;
 }
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 let toastT = 0;
-function toast(t) {
+function toast(t, ms = 3600) {
   const el = $("#toast"); el.textContent = t; el.hidden = false;
-  clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 3600);
+  clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, ms);
 }
 function busy(t) { $("#busyText").textContent = t; $("#busy").hidden = false; }
 function unbusy() { $("#busy").hidden = true; }
+
+// ---------- OpenCV: se încarcă în fundal, la prima nevoie; fără el merge detectorul simplu ----------
+let cvm = null, cvLoading = null;
+function loadCV() {
+  if (cvm || cvLoading) return cvLoading || Promise.resolve(cvm);
+  cvLoading = new Promise(res => {
+    const s = document.createElement("script");
+    s.src = "opencv.js"; s.async = true;
+    s.onload = async () => { try { cvm = await window.cv; if (!cvm || !cvm.Mat) cvm = null; } catch { cvm = null; } res(cvm); };
+    s.onerror = () => res(null);
+    document.head.appendChild(s);
+  });
+  return cvLoading;
+}
+// Caută conturul foii: margini (Canny) → contururi → cel mai mare patrulater convex.
+function detectQuadCV(source, w, h) {
+  const cv = cvm; if (!cv) return null;
+  const k = 480 / Math.max(w, h), sw = Math.max(8, Math.round(w * k)), sh = Math.max(8, Math.round(h * k));
+  const c = canvasOf(sw, sh); c.getContext("2d").drawImage(source, 0, 0, sw, sh);
+  const src = cv.imread(c), gray = new cv.Mat(), edges = new cv.Mat(), contours = new cv.MatVector(), hier = new cv.Mat();
+  const kern = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3, 3));
+  let best = null, bestArea = 0.12 * sw * sh;
+  try {
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+    cv.GaussianBlur(gray, gray, new cv.Size(5, 5), 0);
+    cv.Canny(gray, edges, 40, 120);
+    cv.dilate(edges, edges, kern);
+    cv.findContours(edges, contours, hier, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+    for (let i = 0; i < contours.size(); i++) {
+      const cnt = contours.get(i), area = cv.contourArea(cnt);
+      if (area > bestArea) {
+        const approx = new cv.Mat();
+        cv.approxPolyDP(cnt, approx, 0.03 * cv.arcLength(cnt, true), true);
+        if (approx.rows === 4 && cv.isContourConvex(approx)) {
+          const d = approx.data32S; best = [[d[0], d[1]], [d[2], d[3]], [d[4], d[5]], [d[6], d[7]]]; bestArea = area;
+        }
+        approx.delete();
+      }
+      cnt.delete();
+    }
+  } catch { best = null; }
+  src.delete(); gray.delete(); edges.delete(); contours.delete(); hier.delete(); kern.delete();
+  if (!best) return null;
+  return orderQuad(best.map(([x, y]) => [Math.min(w, Math.max(0, (x + 0.5) / k)), Math.min(h, Math.max(0, (y + 0.5) / k))]));
+}
+function orderQuad(pts) {
+  const s = pts.map(p => p[0] + p[1]), d = pts.map(p => p[0] - p[1]);
+  const at = arr => arr.indexOf(Math.min(...arr)), atMax = arr => arr.indexOf(Math.max(...arr));
+  return [pts[at(s)], pts[atMax(d)], pts[atMax(s)], pts[at(d)]];
+}
+async function findCorners(source, w, h) {
+  if (!cvm && !cvLoading) loadCV();
+  if (cvLoading && !cvm) await Promise.race([cvLoading, new Promise(r => setTimeout(r, 4000))]);
+  return (cvm && detectQuadCV(source, w, h)) || detectCorners(source, w, h) || fullCorners(w, h);
+}
 
 // ---------- prelucrarea imaginii ----------
 async function prepareOriginal(blob) {
@@ -405,7 +662,7 @@ function polyArea(q) {
   return Math.abs(a) / 2;
 }
 
-// Caută foaia: cea mai mare zonă luminoasă (prag Otsu), apoi colțurile ei extreme.
+// Detectorul simplu: cea mai mare zonă luminoasă (prag Otsu), apoi colțurile ei extreme.
 function detectCorners(src, w, h) {
   const k = 220 / Math.max(w, h), sw = Math.max(8, Math.round(w * k)), sh = Math.max(8, Math.round(h * k));
   const c = canvasOf(sw, sh), x = c.getContext("2d", { willReadFrequently: true });
@@ -614,7 +871,7 @@ function pixelsOf(src, w, h) {
 
 // ---------- paginile ----------
 const rec = (p, i) => ({ id: p.id, order: i, orig: p.orig, w: p.w, h: p.h, corners: p.corners, rot: p.rot, filter: p.filter, out: p.out, ow: p.ow, oh: p.oh });
-function persistAll() { pages.forEach((p, i) => store.put(rec(p, i))); }
+function persistAll() { pages.forEach((p, i) => store.pagini.put(rec(p, i))); }
 
 const ICONS = {
   left: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>',
@@ -626,8 +883,8 @@ function renderGrid() {
   $("#empty").hidden = n > 0; grid.hidden = n === 0;
   $("#newDoc").hidden = n === 0;
   $("#meta").textContent = pagesLabel(n);
-  $("#openPdf").disabled = n === 0;
-  $("#pdfLabel").textContent = n ? `Creează PDF (${n})` : "Creează PDF";
+  $("#openPdf").disabled = n === 0; $("#openGrade").disabled = n === 0;
+  $("#pdfLabel").textContent = n ? `PDF (${n})` : "PDF";
   grid.replaceChildren(...pages.map((p, i) => {
     const li = document.createElement("li");
     li.className = "sheet"; li.dataset.id = p.id;
@@ -655,20 +912,88 @@ $("#grid").addEventListener("click", e => {
   if (a === "left" && i > 0) { [pages[i - 1], pages[i]] = [pages[i], pages[i - 1]]; persistAll(); renderGrid(); }
   if (a === "right" && i < pages.length - 1) { [pages[i + 1], pages[i]] = [pages[i], pages[i + 1]]; persistAll(); renderGrid(); }
   if (a === "del") armed(b, "Sigur?", () => {
-    URL.revokeObjectURL(pages[i].url); pages.splice(i, 1); store.del(id); persistAll(); renderGrid(); toast("Pagina a fost ștearsă.");
+    URL.revokeObjectURL(pages[i].url); pages.splice(i, 1); store.pagini.del(id); persistAll(); renderGrid(); toast("Pagina a fost ștearsă.");
   });
 });
 $("#newDoc").addEventListener("click", e => armed(e.currentTarget, "Șterg toate paginile?", () => {
-  pages.forEach(p => URL.revokeObjectURL(p.url)); pages = []; store.clear();
-  $("#docName").value = todayName(); ls.set("scaner-pdf:nume", "");
-  renderGrid(); toast("Document nou, gol.");
+  pages.forEach(p => URL.revokeObjectURL(p.url)); pages = []; store.pagini.clear();
+  renderGrid(); toast("Paginile au fost șterse. Poți fotografia lucrarea următoare.");
 }));
 $("#docName").addEventListener("input", e => ls.set("scaner-pdf:nume", e.target.value));
 
-// ---------- fotografii ----------
+// ---------- fotografii: camera live, cu rezervă aplicația foto a telefonului ----------
 let pending = Promise.resolve();
-document.querySelectorAll('[data-act="cam"]').forEach(b => b.addEventListener("click", () => $("#camIn").click()));
+const video = $("#camVideo"), camQuad = $("#camQuad");
+const cam = { on: false, stream: null, raf: 0, t: 0, last: null, stable: 0, auto: true, busy: false, small: canvasOf(320, 240) };
+
+document.querySelectorAll('[data-act="cam"]').forEach(b => b.addEventListener("click", () => openCamera()));
 document.querySelector('[data-act="gal"]').addEventListener("click", () => $("#galIn").click());
+
+async function openCamera() {
+  const md = navigator.mediaDevices;
+  if (inArtifact || !md || !md.getUserMedia) { $("#camIn").click(); return; }
+  try {
+    cam.stream = await md.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 2560 }, height: { ideal: 1920 } }, audio: false });
+  } catch { $("#camIn").click(); return; }
+  video.srcObject = cam.stream;
+  try { await video.play(); } catch {}
+  $("#cam").hidden = false; cam.on = true; cam.last = null; cam.stable = 0; cam.busy = false;
+  $("#shutter").disabled = false; $("#camCount").hidden = true;
+  $("#camStatus").textContent = "Caut foaia…";
+  loadCV();
+  camLoop();
+}
+function closeCamera() {
+  cam.on = false; cancelAnimationFrame(cam.raf);
+  if (cam.stream) { cam.stream.getTracks().forEach(t => t.stop()); cam.stream = null; }
+  video.srcObject = null; $("#cam").hidden = true; camQuad.innerHTML = "";
+}
+function camLoop() {
+  if (!cam.on) return;
+  const now = performance.now();
+  if (now - cam.t > 160 && video.videoWidth) { cam.t = now; camAnalyze(); }
+  cam.raf = requestAnimationFrame(camLoop);
+}
+function camAnalyze() {
+  const vw = video.videoWidth, vh = video.videoHeight;
+  camQuad.setAttribute("viewBox", `0 0 ${vw} ${vh}`);
+  const q = (cvm && detectQuadCV(video, vw, vh)) || detectCorners(video, vw, vh);
+  if (!q) {
+    cam.last = null; cam.stable = 0; camQuad.innerHTML = "";
+    $("#camStatus").textContent = cvm ? "Caut foaia… pune-o pe un fundal mai închis" : "Caut foaia…";
+    $("#camCount").hidden = true;
+    return;
+  }
+  const tol = 0.025 * Math.max(vw, vh);
+  const same = cam.last && q.every((p, i) => Math.hypot(p[0] - cam.last[i][0], p[1] - cam.last[i][1]) < tol);
+  cam.stable = same ? cam.stable + 1 : 0; cam.last = q;
+  const stable = cam.stable >= 2, cls = stable ? " stable" : "";
+  camQuad.innerHTML = `<polygon class="q-fill${cls}" points="${q.map(p => p.join(",")).join(" ")}"/><polygon class="q-line${cls}" points="${q.map(p => p.join(",")).join(" ")}"/>`;
+  if (!cam.auto) { $("#camStatus").textContent = "Foaia e găsită. Apasă butonul ca să faci poza."; $("#camCount").hidden = true; return; }
+  const left = 6 - cam.stable;   // ~1 secundă nemișcat
+  if (left > 0) {
+    $("#camStatus").textContent = stable ? "Ține nemișcat…" : "Foaia e găsită. Ține telefonul nemișcat.";
+    $("#camCount").hidden = !stable; $("#camCount").textContent = Math.ceil(left / 2);
+  } else shoot();
+}
+async function shoot() {
+  if (cam.busy || !video.videoWidth) return;
+  cam.busy = true; $("#shutter").disabled = true; $("#camCount").hidden = true;
+  $("#camStatus").textContent = "Am făcut poza.";
+  try {
+    const c = canvasOf(video.videoWidth, video.videoHeight);
+    c.getContext("2d").drawImage(video, 0, 0);
+    const blob = await toBlob(c, 0.95);
+    closeCamera();
+    await openFromBlob(blob);
+  } catch { closeCamera(); toast("Poza nu a reușit. Încearcă din nou."); }
+}
+$("#shutter").addEventListener("click", shoot);
+$("#camClose").addEventListener("click", closeCamera);
+$("#camAuto").addEventListener("click", e => {
+  cam.auto = !cam.auto; e.currentTarget.setAttribute("aria-pressed", String(cam.auto)); cam.stable = 0;
+});
+
 $("#camIn").addEventListener("change", async e => {
   const f = e.target.files[0]; e.target.value = "";
   if (!f) return;
@@ -685,7 +1010,7 @@ $("#galIn").addEventListener("change", async e => {
     busy(`Pagina ${i + 1} din ${files.length}…`); await nextFrame();
     try {
       const o = await prepareOriginal(f);
-      const corners = detectCorners(o.canvas, o.w, o.h) || fullCorners(o.w, o.h);
+      const corners = await findCorners(o.canvas, o.w, o.h);
       const c = rendered(applyFilter(warp(pixelsOf(o.canvas, o.w, o.h), corners, MAX_OUT), "curat"), 0);
       await addPage({ id: newId(), orig: o.blob, w: o.w, h: o.h, corners, rot: 0, filter: "curat", out: await toBlob(c, 0.88), ow: c.width, oh: c.height });
       ok++;
@@ -697,8 +1022,8 @@ $("#galIn").addEventListener("change", async e => {
 async function addPage(p) {
   const i = pages.findIndex(x => x.id === p.id);
   const item = { ...p, url: URL.createObjectURL(p.out) };
-  if (i >= 0) { URL.revokeObjectURL(pages[i].url); pages[i] = item; await store.put(rec(item, i)); }
-  else { pages.push(item); await store.put(rec(item, pages.length - 1)); }
+  if (i >= 0) { URL.revokeObjectURL(pages[i].url); pages[i] = item; await store.pagini.put(rec(item, i)); }
+  else { pages.push(item); await store.pagini.put(rec(item, pages.length - 1)); }
 }
 async function openFromBlob(blob) {
   busy("Se deschide poza…"); await nextFrame();
@@ -733,7 +1058,7 @@ $("#sample").addEventListener("click", async () => {
   x.strokeStyle = "#c62828"; x.lineWidth = 5; x.lineCap = "round";
   x.beginPath(); x.moveTo(560, 190); x.lineTo(578, 210); x.lineTo(610, 170); x.stroke();
   x.fillStyle = "#c62828"; x.font = "bold 54px Georgia, serif"; x.fillText("10", pw - 260, 900);
-  x.fillStyle = "#3b4150"; x.font = "24px Georgia, serif"; x.fillText("Nume: ____________________   Data: __________", 0, 960);
+  x.fillStyle = "#3b4150"; x.font = "24px Georgia, serif"; x.fillText("Cod: 9A-07   Data: __________", 0, 960);
   x.restore();
   const l = x.createRadialGradient(W * 0.78, H * 0.15, 40, W * 0.55, H * 0.45, W * 1.1);
   l.addColorStop(0, "rgba(255,248,230,.18)"); l.addColorStop(1, "rgba(0,0,0,.42)");
@@ -750,7 +1075,7 @@ $("#chips").innerHTML = FILTERS.map(([k, t]) => `<button class="chip" type="butt
 async function openEditor(o) {
   Object.assign(ed, { open: true, step: 1, id: o.id, orig: o.orig, w: o.w, h: o.h, rot: o.rot || 0, filter: o.filter || "curat", src: null, warped: null, cache: {}, drag: -1 });
   ed.img = o.img || await loadImage(o.orig);
-  ed.corners = o.corners ? o.corners.map(p => p.slice()) : (detectCorners(ed.img, ed.w, ed.h) || fullCorners(ed.w, ed.h));
+  ed.corners = o.corners ? o.corners.map(p => p.slice()) : await findCorners(ed.img, ed.w, ed.h);
   $("#save").textContent = o.id ? "Salvează pagina" : "Adaugă pagina";
   $("#saveMore").hidden = !!o.id;
   $("#editor").hidden = false;
@@ -837,9 +1162,10 @@ quad.addEventListener("pointerup", endDrag);
 quad.addEventListener("pointercancel", endDrag);
 
 $("#fullImg").addEventListener("click", () => { ed.corners = fullCorners(ed.w, ed.h); drawQuad(); });
-$("#autoDetect").addEventListener("click", () => {
-  const q = detectCorners(ed.img, ed.w, ed.h);
-  if (q) { ed.corners = q; drawQuad(); } else toast("Nu am găsit marginile foii. Trage colțurile cu degetul.");
+$("#autoDetect").addEventListener("click", async () => {
+  const q = await findCorners(ed.img, ed.w, ed.h);
+  if (polyArea(q) >= 0.97 * ed.w * ed.h) toast("Nu am găsit marginile foii. Trage colțurile cu degetul.");
+  ed.corners = q; drawQuad();
 });
 $("#toStep2").addEventListener("click", async () => {
   busy("Se îndreaptă pagina…"); await nextFrame();
@@ -852,7 +1178,7 @@ $("#toStep2").addEventListener("click", async () => {
 });
 function processed() { return ed.cache[ed.filter] || (ed.cache = { [ed.filter]: applyFilter(ed.warped, ed.filter) })[ed.filter]; }
 function renderPreview() {
-  document.querySelectorAll(".chip").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.f === ed.filter)));
+  document.querySelectorAll(".chip[data-f]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.f === ed.filter)));
   $("#prevHost").replaceChildren(rendered(processed(), ed.rot));
   layout();
 }
@@ -875,13 +1201,223 @@ async function commit() {
 }
 $("#save").addEventListener("click", () => { pending = commit(); });
 $("#saveMore").addEventListener("click", () => {
-  $("#camIn").click();   // deschid camera în același gest, cât timp pagina se salvează
   pending = commit();
+  openCamera();   // în același gest, cât timp pagina se salvează
 });
 
-// ---------- PDF ----------
+// ---------- setări ----------
+function saveSettings() { ls.set("scaner-pdf:setari", JSON.stringify(settings)); }
+$("#openSettings").addEventListener("click", () => {
+  $("#sKey").value = settings.key || ""; $("#sMpId").value = settings.mpId || ""; $("#sMpKey").value = settings.mpKey || "";
+  $("#settings").hidden = false;
+});
+$("#toSettings").addEventListener("click", () => $("#openSettings").click());
+$("#setCancel").addEventListener("click", () => { $("#settings").hidden = true; });
+$("#setSave").addEventListener("click", () => {
+  settings.key = $("#sKey").value.trim(); settings.mpId = $("#sMpId").value.trim(); settings.mpKey = $("#sMpKey").value.trim();
+  saveSettings(); $("#settings").hidden = true; $("#noKey").hidden = !!settings.key;
+  toast("Setările au fost salvate.");
+});
+
+// ---------- corectarea ----------
+const SYSTEM = `Ești asistentul unui profesor de matematică din România. Primești baremul unei lucrări și fotografiile lucrării unui elev, scrisă de mână. Propui punctajul pe fiecare problemă, strict după barem.
+
+Reguli:
+- Acorzi puncte doar pentru ce se vede în lucrare. Nu presupui pași care lipsesc și nu inventezi conținut.
+- Punctajul parțial se dă exact cum spune baremul; dacă baremul nu detaliază pașii, împarte punctele proporțional cu pașii corecți și spune cum ai împărțit.
+- O metodă diferită de cea din barem, dar corectă și completă, primește punctaj întreg.
+- Dacă nu poți citi ceva sau ai o îndoială, marchezi problema cu incertitudine și explici ce nu e clar. Profesorul decide.
+- "ce_a_facut" descrie pe scurt rezolvarea elevului; "observatii" explică punctajul (ce a greșit, ce lipsește), în limbaj pentru profesor.
+- Folosești numerotarea problemelor din barem. Pentru o problemă care lipsește din lucrare, punctajul propus e 0 și scrii că lipsește.
+- Răspunzi în română.`;
+const SCHEMA = {
+  type: "object", additionalProperties: false,
+  required: ["lizibilitate", "probleme", "total_propus", "total_maxim", "nota_generala"],
+  properties: {
+    lizibilitate: { type: "string", enum: ["buna", "partiala", "slaba"] },
+    probleme: {
+      type: "array",
+      items: {
+        type: "object", additionalProperties: false,
+        required: ["nr", "punctaj_propus", "punctaj_maxim", "ce_a_facut", "observatii", "incertitudine"],
+        properties: {
+          nr: { type: "string" }, punctaj_propus: { type: "number" }, punctaj_maxim: { type: "number" },
+          ce_a_facut: { type: "string" }, observatii: { type: "string" }, incertitudine: { type: "boolean" },
+        },
+      },
+    },
+    total_propus: { type: "number" }, total_maxim: { type: "number" }, nota_generala: { type: "string" },
+  },
+};
+let proposal = null, saved = [];
+const baremKey = () => "scaner-pdf:barem:" + ($("#gLucrare").value.trim() || "fara-nume");
+
+async function imageForAI(p) {
+  const img = await loadImage(p.out), k = Math.min(1, MAX_AI / Math.max(p.ow, p.oh));
+  const w = Math.round(p.ow * k), h = Math.round(p.oh * k), c = canvasOf(w, h);
+  c.getContext("2d").drawImage(img, 0, 0, w, h);
+  const dataUrl = c.toDataURL("image/jpeg", 0.85);
+  return { dataUrl, b64: dataUrl.split(",")[1] };
+}
+async function mathpixText(dataUrl) {
+  const r = await fetch("https://api.mathpix.com/v3/text", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", app_id: settings.mpId, app_key: settings.mpKey },
+    body: JSON.stringify({ src: dataUrl, formats: ["text"], math_inline_delimiters: ["$", "$"], rm_spaces: true }),
+  });
+  if (!r.ok) throw new Error("Mathpix " + r.status);
+  const j = await r.json();
+  if (j.error) throw new Error(j.error);
+  return j.text || "";
+}
+async function askClaude(barem, images, ocr, cod) {
+  const content = [{ type: "text", text: "BAREMUL LUCRĂRII:\n" + barem, cache_control: { type: "ephemeral" } }];
+  images.forEach((im, i) => {
+    content.push({ type: "text", text: `Pagina ${i + 1} din ${images.length} a lucrării${cod ? " (elev " + cod + ")" : ""}:` });
+    content.push({ type: "image", source: { type: "base64", media_type: "image/jpeg", data: im.b64 } });
+    if (ocr[i]) content.push({ type: "text", text: "Textul paginii citit de Mathpix (poate avea greșeli; pozele au prioritate):\n" + ocr[i] });
+  });
+  content.push({ type: "text", text: "Propune punctajul pe fiecare problemă din barem, după reguli." });
+  const r = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json", "x-api-key": settings.key, "anthropic-version": "2026-10-21",
+      "anthropic-beta": "server-side-fallback-2026-07-01", "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model: MODEL, max_tokens: 16000, fallbacks: "default",
+      output_config: { effort: "high", format: { type: "json_schema", schema: SCHEMA } },
+      system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
+      messages: [{ role: "user", content }],
+    }),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const m = (j.error && j.error.message) || ("HTTP " + r.status);
+    if (r.status === 401) throw new Error("Cheia API nu e acceptată. Verific-o în Setări.");
+    if (r.status === 429) throw new Error("Prea multe cereri deodată. Așteaptă un minut și încearcă din nou.");
+    throw new Error(m);
+  }
+  if (j.stop_reason === "refusal") throw new Error("Modelul a refuzat cererea" + (j.stop_details && j.stop_details.explanation ? ": " + j.stop_details.explanation : "."));
+  if (j.stop_reason === "max_tokens") throw new Error("Răspunsul a fost tăiat. Încearcă cu mai puține pagini odată.");
+  const txt = (j.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+  const out = JSON.parse(txt);
+  out.usage = j.usage || {};
+  return out;
+}
+
+function openGrade() {
+  if (!pages.length) return;
+  $("#gLucrare").value = $("#docName").value.trim() || todayName();
+  if (!$("#gElev").value) $("#gElev").value = urlq.get("elev") || "";
+  $("#gBarem").value = ls.get(baremKey()) || "";
+  $("#gradePages").innerHTML = pages.map((p, i) => `<img alt="pagina ${i + 1}" src="${p.url}">`).join("");
+  $("#noKey").hidden = !!settings.key;
+  $("#gradeRes").hidden = true; proposal = null;
+  renderSaved();
+  $("#grade").hidden = false;
+}
+$("#openGrade").addEventListener("click", openGrade);
+$("#gradeClose").addEventListener("click", () => { $("#grade").hidden = true; });
+$("#gLucrare").addEventListener("change", () => { $("#gBarem").value = ls.get(baremKey()) || $("#gBarem").value; });
+$("#gBarem").addEventListener("input", () => ls.set(baremKey(), $("#gBarem").value));
+
+$("#runGrade").addEventListener("click", async () => {
+  if (!settings.key) { $("#noKey").hidden = false; $("#noKey").scrollIntoView({ block: "center" }); return; }
+  const barem = $("#gBarem").value.trim();
+  if (!barem) { toast("Scrie întâi baremul."); $("#gBarem").focus(); return; }
+  const cod = $("#gElev").value.trim();
+  try {
+    busy("Pregătesc pozele…"); await nextFrame();
+    const images = []; for (const p of pages) images.push(await imageForAI(p));
+    const ocr = [];
+    if (settings.mpId && settings.mpKey) {
+      for (const [i, im] of images.entries()) {
+        busy(`Mathpix citește pagina ${i + 1} din ${images.length}…`);
+        try { ocr[i] = await mathpixText(im.dataUrl); } catch (e) { ocr[i] = ""; toast("Mathpix n-a răspuns (" + e.message + "). Merg mai departe doar cu pozele.", 5000); }
+      }
+    }
+    busy("AI-ul corectează după barem… durează cam un minut.");
+    proposal = await askClaude(barem, images, ocr, cod);
+    proposal.lucrare = $("#gLucrare").value.trim(); proposal.cod_elev = cod;
+    renderProposal();
+  } catch (e) {
+    toast("Corectarea nu a reușit: " + (e.message || e), 7000);
+  } finally { unbusy(); }
+});
+function renderProposal() {
+  const p = proposal;
+  $("#gMax").textContent = p.total_maxim;
+  $("#gNote").textContent = (p.lizibilitate === "slaba" ? "Scrisul e greu de citit; verifică atent. " : p.lizibilitate === "partiala" ? "Unele părți s-au citit greu. " : "") + (p.nota_generala || "");
+  $("#gProbs").innerHTML = p.probleme.map((q, i) => `
+    <div class="prob${q.incertitudine ? " unsure" : ""}">
+      <h4>Problema ${esc(q.nr)}</h4>
+      <div class="pts"><label class="vh" for="pt${i}">Puncte problema ${esc(q.nr)}</label><input id="pt${i}" type="number" inputmode="decimal" step="0.5" min="0" max="${q.punctaj_maxim}" value="${q.punctaj_propus}" data-i="${i}"> / ${q.punctaj_maxim}</div>
+      <p>${esc(q.ce_a_facut)}</p>
+      <p class="obs">${esc(q.observatii)}</p>
+      ${q.incertitudine ? '<span class="flag">De verificat: AI-ul nu e sigur aici.</span>' : ""}
+    </div>`).join("");
+  sumPoints();
+  $("#gradeRes").hidden = false; $("#gradeRes").scrollIntoView({ block: "start", behavior: "smooth" });
+}
+function sumPoints() {
+  let t = 0;
+  document.querySelectorAll("#gProbs input").forEach(i => { t += Number(i.value) || 0; });
+  $("#gTotal").textContent = Number.isInteger(t) ? t : t.toFixed(1);
+  return t;
+}
+$("#gProbs").addEventListener("input", sumPoints);
+$("#gDiscard").addEventListener("click", () => { proposal = null; $("#gradeRes").hidden = true; });
+$("#gValidate").addEventListener("click", async () => {
+  if (!proposal) return;
+  const probs = proposal.probleme.map((q, i) => ({
+    nr: q.nr, puncte: Number($("#pt" + i).value) || 0, maxim: q.punctaj_maxim, propus_ai: q.punctaj_propus, observatii: q.observatii, incertitudine: q.incertitudine,
+  }));
+  const r = {
+    id: newId(), data: new Date().toISOString(), lucrare: proposal.lucrare, cod_elev: proposal.cod_elev || "",
+    total: probs.reduce((s, q) => s + q.puncte, 0), maxim: proposal.total_maxim, probleme: probs,
+    lizibilitate: proposal.lizibilitate, validat: true, sursa: "scaner-pdf", pagini: pages.length,
+  };
+  saved.push(r); await store.rezultate.put(r);
+  proposal = null; $("#gradeRes").hidden = true; renderSaved();
+  toast(`Salvat: ${r.cod_elev || "elev"} · ${r.total}/${r.maxim} p. Poți fotografia lucrarea următoare.`, 5000);
+});
+function renderSaved() {
+  $("#savedWrap").hidden = saved.length === 0;
+  $("#savedCount").textContent = saved.length ? `(${saved.length})` : "";
+  $("#savedList").innerHTML = saved.slice().reverse().map(r =>
+    `<li><span><strong>${esc(r.cod_elev || "fără cod")}</strong> <span class="meta">${esc(r.lucrare)} · ${new Date(r.data).toLocaleDateString("ro-RO")}</span></span><b>${r.total} / ${r.maxim}</b></li>`).join("");
+}
+$("#clearSaved").addEventListener("click", e => armed(e.currentTarget, "Șterg toate rezultatele?", async () => {
+  saved = []; await store.rezultate.clear(); renderSaved(); toast("Rezultatele au fost șterse.");
+}));
+const csvCell = v => '"' + String(v ?? "").replace(/"/g, '""') + '"';
+$("#expCsv").addEventListener("click", () => {
+  const rows = [["data", "lucrare", "cod_elev", "total", "maxim", "probleme"].join(";")];
+  saved.forEach(r => rows.push([r.data.slice(0, 10), r.lucrare, r.cod_elev, r.total, r.maxim, r.probleme.map(q => `${q.nr}: ${q.puncte}/${q.maxim}`).join(" | ")].map(csvCell).join(";")));
+  saveFile("rezultate.csv", new Blob(["﻿" + rows.join("\r\n")], { type: "text/csv" }));
+});
+$("#expJson").addEventListener("click", () => saveFile("rezultate.json", new Blob([JSON.stringify({ format: "scaner-pdf/rezultate@1", exportat: new Date().toISOString(), rezultate: saved }, null, 2)], { type: "application/json" })));
+
+// ---------- salvarea fișierelor ----------
 let dlCap = null;
 const downloads = () => inArtifact ? (dlCap || (dlCap = window.claude.use("downloads").catch(() => null))) : Promise.resolve(null);
+async function saveFile(name, blob) {
+  const dl = await downloads();
+  if (dl) {
+    try { await dl.save({ filename: name, data: blob }); toast("Fișierul a fost salvat."); }
+    catch (e) { if (!e || e.code !== "declined") toast("Salvarea nu a mers aici. Deschide aplicația instalată ca să salvezi."); }
+    return;
+  }
+  if (inArtifact) { toast("Salvarea nu e disponibilă în această previzualizare."); return; }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  toast("Fișierul a fost salvat în Descărcări.");
+}
+
+// ---------- PDF ----------
 const canShareFiles = (() => {
   if (inArtifact || !navigator.canShare) return false;
   try { return navigator.canShare({ files: [new File(["x"], "t.pdf", { type: "application/pdf" })] }); } catch { return false; }
@@ -932,21 +1468,7 @@ $("#pdfMake").addEventListener("click", async () => {
     toast("PDF-ul nu a putut fi creat. Încearcă cu „Fișier mic”.");
   } finally { unbusy(); }
 });
-$("#pdfSave").addEventListener("click", async () => {
-  if (!pdfBlob) return;
-  const name = fileName(), dl = await downloads();
-  if (dl) {
-    try { await dl.save({ filename: name, data: pdfBlob }); toast("PDF salvat."); }
-    catch (e) { if (!e || e.code !== "declined") toast("Salvarea nu a mers aici. Deschide aplicația instalată ca să salvezi."); }
-    return;
-  }
-  if (inArtifact) { toast("Salvarea nu e disponibilă în această previzualizare."); return; }
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(pdfBlob); a.download = name;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
-  toast("PDF salvat în Descărcări.");
-});
+$("#pdfSave").addEventListener("click", () => { if (pdfBlob) saveFile(fileName(), pdfBlob); });
 $("#pdfShare").addEventListener("click", async () => {
   if (!pdfBlob) return;
   try { await navigator.share({ files: [new File([pdfBlob], fileName(), { type: "application/pdf" })], title: fileName() }); }
@@ -956,14 +1478,19 @@ $("#pdfShare").addEventListener("click", async () => {
 addEventListener("keydown", e => {
   if (e.key !== "Escape") return;
   if (!$("#pdfSheet").hidden) $("#pdfSheet").hidden = true;
+  else if (!$("#settings").hidden) $("#settings").hidden = true;
+  else if (cam.on) closeCamera();
   else if (ed.open) closeEditor();
+  else if (!$("#grade").hidden) $("#grade").hidden = true;
 });
 
 // ---------- pornire ----------
 (async () => {
-  $("#docName").value = ls.get("scaner-pdf:nume") || todayName();
-  const saved = (await store.all()) || [];
-  pages = saved.sort((a, b) => a.order - b.order).map(p => ({ ...p, url: URL.createObjectURL(p.out) }));
+  $("#docName").value = urlq.get("lucrare") || ls.get("scaner-pdf:nume") || todayName();
+  if (urlq.get("lucrare")) ls.set("scaner-pdf:nume", urlq.get("lucrare"));
+  const savedPages = (await store.pagini.all()) || [];
+  pages = savedPages.sort((a, b) => a.order - b.order).map(p => ({ ...p, url: URL.createObjectURL(p.out) }));
+  saved = ((await store.rezultate.all()) || []).sort((a, b) => a.data < b.data ? -1 : 1);
   renderGrid();
 })();
 })();

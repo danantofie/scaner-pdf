@@ -27,5 +27,5 @@ HEAD
 TAIL
 } > docs/index.html
 cp sw.js manifest.webmanifest icon.svg icon-192.png icon-512.png docs/
-cp tools/jspdf.umd.min.js docs/
+cp tools/jspdf.umd.min.js tools/opencv.js docs/
 echo "docs/ gata"
